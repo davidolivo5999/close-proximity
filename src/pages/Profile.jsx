@@ -10,6 +10,7 @@ import { LogOut, Save, Eye, EyeOff, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
+import PastHangouts from "@/components/profile/PastHangouts";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -216,9 +217,11 @@ export default function Profile() {
         </Button>
       </div>
 
+      <PastHangouts userId={user?.id} />
+
       <Button
         variant="ghost"
-        className="w-full mt-6 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+        className="w-full mt-6 mb-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
         onClick={handleLogout}
       >
         <LogOut className="h-4 w-4 mr-2" /> Sign Out
