@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, Users, CheckCircle2, Trash2 } from "lucide-react";
+import { MapPin, Clock, Users, CheckCircle2, Trash2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/shared/UserAvatar";
+import HangoutChat from "./HangoutChat";
 
 function useCountdown(expiresAt) {
   const [timeLeft, setTimeLeft] = useState("");
@@ -47,10 +48,12 @@ export default function HangoutCard({
   hangout,
   distance,
   currentUserId,
+  currentUser,
   onRsvp,
   onDelete,
   index = 0,
 }) {
+  const [chatOpen, setChatOpen] = useState(false);
   const { timeLeft, isExpired } = useCountdown(hangout.expires_at);
   const isHost = hangout.host_id === currentUserId;
   const hasRsvped = (hangout.attendee_ids || []).includes(currentUserId);
@@ -148,24 +151,40 @@ export default function HangoutCard({
         )}
       </div>
 
-      {/* RSVP */}
-      {!isHost && !isExpired && (
-        <div className="mt-3">
-          {hasRsvped ? (
-            <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
-              <CheckCircle2 className="h-4 w-4" /> You're going!
-            </div>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-              onClick={() => onRsvp(hangout)}
-            >
-              Join Hangout
-            </Button>
-          )}
-        </div>
+      {/* RSVP + Chat toggle row */}
+      <div className="mt-3 flex items-center gap-2">
+        {!isHost && !isExpired && (
+          <div className="flex-1">
+            {hasRsvped ? (
+              <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
+                <CheckCircle2 className="h-4 w-4" /> You're going!
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => onRsvp(hangout)}
+              >
+                Join Hangout
+              </Button>
+            )}
+          </div>
+        )}
+        <Button
+          size="sm"
+          variant={chatOpen ? "secondary" : "ghost"}
+          className="rounded-xl gap-1.5 text-muted-foreground hover:text-foreground ml-auto"
+          onClick={() => setChatOpen((v) => !v)}
+        >
+          <MessageCircle className="h-4 w-4" />
+          Chat
+        </Button>
+      </div>
+
+      {/* Chat panel */}
+      {chatOpen && currentUser && (
+        <HangoutChat hangoutId={hangout.id} currentUser={currentUser} />
       )}
     </motion.div>
   );

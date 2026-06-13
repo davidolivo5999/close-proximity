@@ -1,0 +1,23 @@
+{
+  "name": "HangoutMessage",
+  "type": "object",
+  "properties": {
+    "hangout_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "hangout_id",
+    "user_id",
+    "text"
+  ]
+}

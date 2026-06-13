@@ -253,6 +253,7 @@ export default function Nearby() {
                       hangout={h}
                       distance={h.distance}
                       currentUserId={user?.id}
+                      currentUser={user}
                       index={i}
                       onRsvp={(h) => rsvpHangout.mutate(h)}
                       onDelete={(h) => deleteHangout.mutate(h)}
