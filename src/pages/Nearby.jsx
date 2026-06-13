@@ -11,6 +11,7 @@ import HangoutCard from "@/components/hangouts/HangoutCard";
 import CreateHangoutDialog from "@/components/hangouts/CreateHangoutDialog";
 import { useUserLocation, calculateDistance } from "@/hooks/useLocation";
 import NearbyFilters from "@/components/nearby/NearbyFilters";
+import { useHangoutNotifications } from "@/hooks/useHangoutNotifications";
 
 const RADIUS_KM = 50;
 
@@ -181,6 +182,8 @@ export default function Nearby() {
       queryClient.invalidateQueries({ queryKey: ["hangouts"] });
     },
   });
+
+  useHangoutNotifications({ user, location });
 
   const handleScan = useCallback(() => {
     setIsScanning(true);
