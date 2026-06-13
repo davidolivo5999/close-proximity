@@ -10,12 +10,15 @@ import NearbyUserCard from "@/components/nearby/NearbyUserCard";
 import HangoutCard from "@/components/hangouts/HangoutCard";
 import CreateHangoutDialog from "@/components/hangouts/CreateHangoutDialog";
 import { useUserLocation, calculateDistance } from "@/hooks/useLocation";
+import NearbyFilters from "@/components/nearby/NearbyFilters";
 
 const RADIUS_KM = 50;
 
 export default function Nearby() {
   const [isScanning, setIsScanning] = useState(false);
   const [showCreateHangout, setShowCreateHangout] = useState(false);
+  const [sortBy, setSortBy] = useState("distance");
+  const [activeInterest, setActiveInterest] = useState(null);
   const queryClient = useQueryClient();
   const { location, error: locError, loading: locLoading, requestLocation } = useUserLocation();
 
@@ -92,7 +95,12 @@ export default function Nearby() {
           ),
         }))
         .filter((u) => u.distance <= RADIUS_KM)
-        .sort((a, b) => a.distance - b.distance)
+        .filter((u) => !activeInterest || (u.interests || []).includes(activeInterest))
+        .sort((a, b) =>
+          sortBy === "name"
+            ? (a.user_name || "").localeCompare(b.user_name || "")
+            : a.distance - b.distance
+        )
     : [];
 
   // Filter non-expired hangouts within radius
@@ -266,6 +274,12 @@ export default function Nearby() {
 
           {/* ── People section ── */}
           <section>
+            <NearbyFilters
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              activeInterest={activeInterest}
+              setActiveInterest={setActiveInterest}
+            />
             {nearbyUsers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">

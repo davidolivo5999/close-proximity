@@ -9,11 +9,13 @@ import { Switch } from "@/components/ui/switch";
 import { LogOut, Save, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import UserAvatar from "@/components/shared/UserAvatar";
+import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 
 export default function Profile() {
   const queryClient = useQueryClient();
   const [bio, setBio] = useState("");
   const [isVisible, setIsVisible] = useState(true);
+  const [interests, setInterests] = useState([]);
   const [saving, setSaving] = useState(false);
 
   const { data: user } = useQuery({
@@ -50,6 +52,7 @@ export default function Profile() {
     if (myLocation) {
       setBio(myLocation.bio || "");
       setIsVisible(myLocation.is_visible !== false);
+      setInterests(myLocation.interests || []);
     }
   }, [myLocation]);
 
@@ -62,6 +65,7 @@ export default function Profile() {
     await base44.entities.UserLocation.update(myLocation.id, {
       bio,
       is_visible: isVisible,
+      interests,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
@@ -111,6 +115,31 @@ export default function Profile() {
             className="rounded-xl resize-none bg-muted/50 border-0 focus-visible:ring-primary/30"
             rows={3}
           />
+        </div>
+
+        <div>
+          <Label className="text-sm font-medium mb-2 block">Interests</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {INTEREST_TAGS.map((tag) => {
+              const active = interests.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() =>
+                    setInterests(active ? interests.filter((t) => t !== tag) : [...interests, tag])
+                  }
+                  className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted/50 text-muted-foreground border-border hover:border-primary/50"
+                  }`}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="flex items-center justify-between py-2">

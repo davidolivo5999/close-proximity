@@ -28,6 +28,13 @@
       "type": "boolean",
       "default": true,
       "description": "Whether user is discoverable"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of interest tags the user has selected"
     }
   },
   "required": [
