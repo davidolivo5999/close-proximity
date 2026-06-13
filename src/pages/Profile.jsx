@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
+import PrivacyZones from "@/components/profile/PrivacyZones";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -18,6 +19,7 @@ export default function Profile() {
   const [isVisible, setIsVisible] = useState(true);
   const [interests, setInterests] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [privacyZones, setPrivacyZones] = useState([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +59,7 @@ export default function Profile() {
       setIsVisible(myLocation.is_visible !== false);
       setInterests(myLocation.interests || []);
       setPhotos(myLocation.photos || []);
+      setPrivacyZones(myLocation.privacy_zones || []);
     }
   }, [myLocation]);
 
@@ -71,6 +74,7 @@ export default function Profile() {
       is_visible: isVisible,
       interests,
       photos,
+      privacy_zones: privacyZones,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
@@ -192,7 +196,9 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between py-2">
+        <PrivacyZones zones={privacyZones} onChange={setPrivacyZones} />
+
+        <div className="border-t border-border pt-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {isVisible ? (
               <Eye className="h-4 w-4 text-emerald-500" />

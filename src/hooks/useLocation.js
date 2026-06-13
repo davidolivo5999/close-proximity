@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
-export function useUserLocation() {
+export function useUserLocation(privacyZones = []) {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [insideZone, setInsideZone] = useState(null); // zone name if blocked
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -16,21 +17,33 @@ export function useUserLocation() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        // Check if inside any privacy zone
+        const blocked = privacyZones.find((zone) => {
+          const distM = calculateDistance(lat, lon, zone.latitude, zone.longitude) * 1000;
+          return distM <= zone.radius_m;
         });
+
+        if (blocked) {
+          setInsideZone(blocked.name);
+          setLocation(null);
+        } else {
+          setInsideZone(null);
+          setLocation({ latitude: lat, longitude: lon });
+        }
         setLoading(false);
       },
-      (err) => {
+      () => {
         setError("Please enable location access to discover nearby people");
         setLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
-  }, []);
+  }, [privacyZones]);
 
-  return { location, error, loading, requestLocation };
+  return { location, error, loading, insideZone, requestLocation };
 }
 
 export function calculateDistance(lat1, lon1, lat2, lon2) {

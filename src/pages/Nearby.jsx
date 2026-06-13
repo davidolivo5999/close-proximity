@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radar, MapPinOff, RefreshCw, Plus, Map, List } from "lucide-react";
+import { Radar, MapPinOff, RefreshCw, Plus, Map, List, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,18 +21,39 @@ export default function Nearby() {
   const [showCreateHangout, setShowCreateHangout] = useState(false);
   const [sortBy, setSortBy] = useState("distance");
   const [activeInterest, setActiveInterest] = useState(null);
-  const [hangoutsView, setHangoutsView] = useState("list"); // "list" | "map"
+  const [hangoutsView, setHangoutsView] = useState("list");
   const queryClient = useQueryClient();
-  const { location, error: locError, loading: locLoading, requestLocation } = useUserLocation();
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
   });
 
-  // Broadcast own location
+  // Fetch user's own location record to get privacy zones
+  const { data: myLocationRecord } = useQuery({
+    queryKey: ["myLocation", user?.id],
+    queryFn: async () => {
+      const locs = await base44.entities.UserLocation.filter({ user_id: user.id });
+      return locs[0] || null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const privacyZones = myLocationRecord?.privacy_zones || [];
+
+  const { location, error: locError, loading: locLoading, insideZone, requestLocation } =
+    useUserLocation(privacyZones);
+
+  // Broadcast own location (only when NOT inside a privacy zone)
   useEffect(() => {
-    if (!location || !user) return;
+    if (!user) return;
+    if (!location) {
+      // If inside a zone, hide the user from discovery
+      if (insideZone && myLocationRecord) {
+        base44.entities.UserLocation.update(myLocationRecord.id, { is_visible: false });
+      }
+      return;
+    }
     const broadcast = async () => {
       const existing = await base44.entities.UserLocation.filter({ user_id: user.id });
       const data = {
@@ -49,7 +70,7 @@ export default function Nearby() {
       }
     };
     broadcast();
-  }, [location, user]);
+  }, [location, user, insideZone]);
 
   // All visible user locations
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
@@ -106,7 +127,6 @@ export default function Nearby() {
         )
     : [];
 
-  // Filter non-expired hangouts within radius
   const nearbyHangouts = location
     ? allHangouts
         .filter((h) => new Date(h.expires_at) > new Date())
@@ -231,8 +251,18 @@ export default function Nearby() {
         </div>
       </div>
 
+      {/* Privacy zone banner */}
+      {insideZone && !isScanning && (
+        <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-4">
+          <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+          <p className="text-sm text-primary font-medium">
+            Privacy zone active — <span className="font-semibold">{insideZone}</span>. Your location is hidden.
+          </p>
+        </div>
+      )}
+
       {/* No location */}
-      {!location && !isScanning && (
+      {!location && !isScanning && !insideZone && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
             <MapPinOff className="h-8 w-8 text-muted-foreground" />

@@ -42,6 +42,27 @@
         "type": "string"
       },
       "description": "URLs of profile photos uploaded by the user"
+    },
+    "privacy_zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "radius_m": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Areas where the user's location is hidden from others"
     }
   },
   "required": [
