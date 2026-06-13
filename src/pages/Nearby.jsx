@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radar, MapPinOff, RefreshCw, Plus } from "lucide-react";
+import { Radar, MapPinOff, RefreshCw, Plus, Map, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import CreateHangoutDialog from "@/components/hangouts/CreateHangoutDialog";
 import { useUserLocation, calculateDistance } from "@/hooks/useLocation";
 import NearbyFilters from "@/components/nearby/NearbyFilters";
 import { useHangoutNotifications } from "@/hooks/useHangoutNotifications";
+import HangoutsMap from "@/components/hangouts/HangoutsMap";
 
 const RADIUS_KM = 50;
 
@@ -20,6 +21,7 @@ export default function Nearby() {
   const [showCreateHangout, setShowCreateHangout] = useState(false);
   const [sortBy, setSortBy] = useState("distance");
   const [activeInterest, setActiveInterest] = useState(null);
+  const [hangoutsView, setHangoutsView] = useState("list"); // "list" | "map"
   const queryClient = useQueryClient();
   const { location, error: locError, loading: locLoading, requestLocation } = useUserLocation();
 
@@ -253,25 +255,58 @@ export default function Nearby() {
           {/* ── Hangouts section ── */}
           {nearbyHangouts.length > 0 && (
             <section>
-              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
-                🔥 Active Hangouts — {nearbyHangouts.length}
-              </p>
-              <div className="space-y-3">
-                <AnimatePresence>
-                  {nearbyHangouts.map((h, i) => (
-                    <HangoutCard
-                      key={h.id}
-                      hangout={h}
-                      distance={h.distance}
-                      currentUserId={user?.id}
-                      currentUser={user}
-                      index={i}
-                      onRsvp={(h) => rsvpHangout.mutate(h)}
-                      onDelete={(h) => deleteHangout.mutate(h)}
-                    />
-                  ))}
-                </AnimatePresence>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  🔥 Active Hangouts — {nearbyHangouts.length}
+                </p>
+                <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                  <button
+                    onClick={() => setHangoutsView("list")}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      hangoutsView === "list"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <List className="h-3 w-3" /> List
+                  </button>
+                  <button
+                    onClick={() => setHangoutsView("map")}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      hangoutsView === "map"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Map className="h-3 w-3" /> Map
+                  </button>
+                </div>
               </div>
+
+              {hangoutsView === "map" ? (
+                <HangoutsMap
+                  hangouts={nearbyHangouts}
+                  userLocation={location}
+                  onSelectHangout={() => {}}
+                />
+              ) : (
+                <div className="space-y-3">
+                  <AnimatePresence>
+                    {nearbyHangouts.map((h, i) => (
+                      <HangoutCard
+                        key={h.id}
+                        hangout={h}
+                        distance={h.distance}
+                        currentUserId={user?.id}
+                        currentUser={user}
+                        index={i}
+                        onRsvp={(h) => rsvpHangout.mutate(h)}
+                        onDelete={(h) => deleteHangout.mutate(h)}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
             </section>
           )}
 
