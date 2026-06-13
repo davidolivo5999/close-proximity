@@ -1,0 +1,53 @@
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Radar, Users, Bell, UserCircle } from "lucide-react";
+
+const NAV_ITEMS = [
+  { path: "/", icon: Radar, label: "Nearby" },
+  { path: "/friends", icon: Users, label: "Friends" },
+  { path: "/requests", icon: Bell, label: "Requests" },
+  { path: "/profile", icon: UserCircle, label: "Profile" },
+];
+
+export default function BottomNav({ pendingCount = 0 }) {
+  const location = useLocation();
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border safe-area-bottom">
+      <div className="flex items-center justify-around max-w-lg mx-auto px-2 py-2">
+        {NAV_ITEMS.map(({ path, icon: Icon, label }) => {
+          const isActive = location.pathname === path;
+          return (
+            <Link
+              key={path}
+              to={path}
+              className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative ${
+                isActive
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className="relative">
+                <Icon
+                  className={`h-5 w-5 transition-transform duration-200 ${
+                    isActive ? "scale-110" : ""
+                  }`}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                />
+                {label === "Requests" && pendingCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                    {pendingCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-medium">{label}</span>
+              {isActive && (
+                <div className="absolute -bottom-2 w-6 h-0.5 bg-primary rounded-full" />
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}

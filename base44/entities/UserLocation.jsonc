@@ -1,0 +1,38 @@
+{
+  "name": "UserLocation",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The user's ID"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name"
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Short bio"
+    },
+    "avatar_color": {
+      "type": "string",
+      "description": "Color for avatar placeholder"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether user is discoverable"
+    }
+  },
+  "required": [
+    "user_id",
+    "latitude",
+    "longitude"
+  ]
+}

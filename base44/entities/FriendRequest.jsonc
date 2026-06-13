@@ -1,0 +1,36 @@
+{
+  "name": "FriendRequest",
+  "type": "object",
+  "properties": {
+    "from_user_id": {
+      "type": "string",
+      "description": "ID of the user sending the request"
+    },
+    "to_user_id": {
+      "type": "string",
+      "description": "ID of the user receiving the request"
+    },
+    "from_user_name": {
+      "type": "string",
+      "description": "Name of the sender"
+    },
+    "to_user_name": {
+      "type": "string",
+      "description": "Name of the receiver"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "from_user_id",
+    "to_user_id",
+    "status"
+  ]
+}
