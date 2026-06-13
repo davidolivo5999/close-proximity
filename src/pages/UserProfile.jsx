@@ -21,6 +21,7 @@ export default function UserProfile() {
 
   // back destination passed via navigation state, fallback to "/"
   const backTo = location.state?.from || "/";
+  const backTab = location.state?.from || "/";
 
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
@@ -52,7 +53,7 @@ export default function UserProfile() {
     });
     queryClient.invalidateQueries({ queryKey: ["blocks"] });
     toast.success("User blocked.");
-    navigate(backTo, { replace: true });
+    navigate(backTo, { replace: true, state: { __tab: backTab } });
   };
 
   const userName = locationData?.user_name || location.state?.userName || "User";
@@ -61,7 +62,7 @@ export default function UserProfile() {
     <div className="px-5 pt-4 pb-10 max-w-lg mx-auto">
       {/* Back button */}
       <button
-        onClick={() => navigate(backTo)}
+        onClick={() => navigate(backTo, { state: { __tab: backTab } })}
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 -ml-1"
       >
         <ArrowLeft className="h-4 w-4" />

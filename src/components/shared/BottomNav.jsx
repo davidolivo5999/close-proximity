@@ -1,6 +1,7 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Radar, Users, Bell, UserCircle, Search } from "lucide-react";
+import { useTabHistory, TAB_ROOTS } from "@/lib/TabHistoryContext";
 
 const NAV_ITEMS = [
   { path: "/", icon: Radar, label: "Nearby" },
@@ -10,18 +11,31 @@ const NAV_ITEMS = [
   { path: "/profile", icon: UserCircle, label: "Profile" },
 ];
 
+function getActiveTab(pathname) {
+  if (pathname === "/") return "/";
+  for (const root of TAB_ROOTS) {
+    if (root !== "/" && pathname.startsWith(root)) return root;
+  }
+  // For /user/:id, check navigation state — fall back to "/"
+  return "/";
+}
+
 export default function BottomNav({ pendingCount = 0 }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { getTabPath } = useTabHistory();
+
+  const activeTab = location.state?.__tab || getActiveTab(location.pathname);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border safe-area-bottom">
       <div className="flex items-center justify-around max-w-lg mx-auto px-2 py-2">
         {NAV_ITEMS.map(({ path, icon: Icon, label }) => {
-          const isActive = location.pathname === path;
+          const isActive = activeTab === path;
           return (
-            <Link
+            <button
               key={path}
-              to={path}
+              onClick={() => navigate(getTabPath(path), { state: { __tab: path } })}
               className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-all duration-200 relative ${
                 isActive
                   ? "text-primary"
@@ -45,7 +59,7 @@ export default function BottomNav({ pendingCount = 0 }) {
               {isActive && (
                 <div className="absolute -bottom-2 w-6 h-0.5 bg-primary rounded-full" />
               )}
-            </Link>
+            </button>
           );
         })}
       </div>
