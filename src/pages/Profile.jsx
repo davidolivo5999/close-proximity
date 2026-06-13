@@ -119,7 +119,9 @@ export default function Profile() {
     for (const r of [...sent, ...received]) {
       await base44.entities.FriendRequest.delete(r.id);
     }
-    toast.success("Profile deleted. Signing you out...");
+    // Delete the auth account itself
+    await base44.auth.deleteMe();
+    toast.success("Account deleted. Signing you out...");
     setTimeout(() => base44.auth.logout("/login"), 1500);
   };
 

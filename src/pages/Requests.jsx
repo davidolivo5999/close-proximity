@@ -47,6 +47,17 @@ export default function Requests() {
   const acceptMutation = useMutation({
     mutationFn: (req) =>
       base44.entities.FriendRequest.update(req.id, { status: "accepted" }),
+    onMutate: async (req) => {
+      await queryClient.cancelQueries({ queryKey: ["incomingRequests", user?.id] });
+      const prev = queryClient.getQueryData(["incomingRequests", user?.id]);
+      queryClient.setQueryData(["incomingRequests", user?.id], (old = []) =>
+        old.filter((r) => r.id !== req.id)
+      );
+      return { prev };
+    },
+    onError: (_err, _req, ctx) => {
+      queryClient.setQueryData(["incomingRequests", user?.id], ctx.prev);
+    },
     onSuccess: () => {
       toast.success("Friend added!");
       invalidateAll();
@@ -56,6 +67,17 @@ export default function Requests() {
   const rejectMutation = useMutation({
     mutationFn: (req) =>
       base44.entities.FriendRequest.update(req.id, { status: "rejected" }),
+    onMutate: async (req) => {
+      await queryClient.cancelQueries({ queryKey: ["incomingRequests", user?.id] });
+      const prev = queryClient.getQueryData(["incomingRequests", user?.id]);
+      queryClient.setQueryData(["incomingRequests", user?.id], (old = []) =>
+        old.filter((r) => r.id !== req.id)
+      );
+      return { prev };
+    },
+    onError: (_err, _req, ctx) => {
+      queryClient.setQueryData(["incomingRequests", user?.id], ctx.prev);
+    },
     onSuccess: () => {
       toast("Request declined");
       invalidateAll();

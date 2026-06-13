@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClientInstance } from "@/lib/query-client";
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import PageNotFound from "./lib/PageNotFound";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import { TabHistoryProvider } from "@/lib/TabHistoryContext";
@@ -21,8 +22,33 @@ import Profile from "@/pages/Profile";
 import Search from "@/pages/Search";
 import UserProfile from "@/pages/UserProfile";
 
+// Fade transition for tab switches
+const PageWrapper = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.15 }}
+  >
+    {children}
+  </motion.div>
+);
+
+// Slide-in transition for sub-pages like UserProfile
+const SlideWrapper = ({ children }) => (
+  <motion.div
+    initial={{ x: "100%" }}
+    animate={{ x: 0 }}
+    exit={{ x: "100%" }}
+    transition={{ type: "spring", stiffness: 380, damping: 40 }}
+  >
+    {children}
+  </motion.div>
+);
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const routerLocation = useLocation();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -42,25 +68,27 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+    <AnimatePresence mode="wait" initial={false}>
+      <Routes location={routerLocation} key={routerLocation.pathname}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Nearby />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/requests" element={<Requests />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/user/:userId" element={<UserProfile />} />
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<PageWrapper><Nearby /></PageWrapper>} />
+            <Route path="/friends" element={<PageWrapper><Friends /></PageWrapper>} />
+            <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
+            <Route path="/requests" element={<PageWrapper><Requests /></PageWrapper>} />
+            <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
+            <Route path="/user/:userId" element={<SlideWrapper><UserProfile /></SlideWrapper>} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 

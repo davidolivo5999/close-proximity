@@ -13,6 +13,7 @@ import { useUserLocation, calculateDistance } from "@/hooks/useLocation";
 import NearbyFilters from "@/components/nearby/NearbyFilters";
 import { useHangoutNotifications } from "@/hooks/useHangoutNotifications";
 import HangoutsMap from "@/components/hangouts/HangoutsMap";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 const RADIUS_KM = 50;
 
@@ -258,146 +259,148 @@ export default function Nearby() {
         </div>
       </div>
 
-      <div className="px-5 pt-3">
-        {/* Privacy zone banner */}
-        {insideZone && !isScanning && (
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-4">
-            <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-            <p className="text-sm text-primary font-medium">
-              Privacy zone active — <span className="font-semibold">{insideZone}</span>. Your location is hidden.
-            </p>
-          </div>
-        )}
-
-        {/* No location */}
-        {!location && !isScanning && !insideZone && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-              <MapPinOff className="h-8 w-8 text-muted-foreground" />
+      <PullToRefresh onRefresh={async () => { await Promise.all([refetchLocations(), refetchHangouts()]); }}>
+        <div className="px-5 pt-3">
+          {/* Privacy zone banner */}
+          {insideZone && !isScanning && (
+            <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-4">
+              <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-sm text-primary font-medium">
+                Privacy zone active — <span className="font-semibold">{insideZone}</span>. Your location is hidden.
+              </p>
             </div>
-            <h2 className="text-lg font-semibold mb-2">Location Required</h2>
-            <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-              {locError || "Enable location access to discover people around you"}
-            </p>
-            <Button onClick={handleScan} className="rounded-full px-8">
-              <Radar className="h-4 w-4 mr-2" /> Enable &amp; Scan
-            </Button>
-          </div>
-        )}
+          )}
 
-        {isScanning && <PulseRadar isScanning={true} />}
+          {/* No location */}
+          {!location && !isScanning && !insideZone && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                <MapPinOff className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-lg font-semibold mb-2">Location Required</h2>
+              <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+                {locError || "Enable location access to discover people around you"}
+              </p>
+              <Button onClick={handleScan} className="rounded-full px-8">
+                <Radar className="h-4 w-4 mr-2" /> Enable &amp; Scan
+              </Button>
+            </div>
+          )}
 
-        {location && !isScanning && (
-          <div className="mt-4 space-y-6">
+          {isScanning && <PulseRadar isScanning={true} />}
 
-            {/* Hangouts section */}
-            {nearbyHangouts.length > 0 && (
+          {location && !isScanning && (
+            <div className="mt-4 space-y-6">
+
+              {/* Hangouts section */}
+              {nearbyHangouts.length > 0 && (
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                      🔥 Active Hangouts — {nearbyHangouts.length}
+                    </p>
+                    <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                      <button
+                        onClick={() => setHangoutsView("list")}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                          hangoutsView === "list"
+                            ? "bg-card text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <List className="h-3 w-3" /> List
+                      </button>
+                      <button
+                        onClick={() => setHangoutsView("map")}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                          hangoutsView === "map"
+                            ? "bg-card text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Map className="h-3 w-3" /> Map
+                      </button>
+                    </div>
+                  </div>
+
+                  {hangoutsView === "map" ? (
+                    <HangoutsMap
+                      hangouts={nearbyHangouts}
+                      userLocation={location}
+                      onSelectHangout={() => {}}
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      <AnimatePresence>
+                        {nearbyHangouts.map((h, i) => (
+                          <HangoutCard
+                            key={h.id}
+                            hangout={h}
+                            distance={h.distance}
+                            currentUserId={user?.id}
+                            currentUser={user}
+                            index={i}
+                            onRsvp={(h) => rsvpHangout.mutate(h)}
+                            onDelete={(h) => deleteHangout.mutate(h)}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* People section */}
               <section>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-                    🔥 Active Hangouts — {nearbyHangouts.length}
-                  </p>
-                  <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                    <button
-                      onClick={() => setHangoutsView("list")}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                        hangoutsView === "list"
-                          ? "bg-card text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <List className="h-3 w-3" /> List
-                    </button>
-                    <button
-                      onClick={() => setHangoutsView("map")}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                        hangoutsView === "map"
-                          ? "bg-card text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Map className="h-3 w-3" /> Map
-                    </button>
+                <NearbyFilters
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  activeInterest={activeInterest}
+                  setActiveInterest={setActiveInterest}
+                />
+                {nearbyUsers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                      <Radar className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h2 className="text-lg font-semibold mb-2">No one nearby</h2>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      Nobody within {RADIUS_KM}km right now — but you can still drop a hangout!
+                    </p>
                   </div>
-                </div>
-
-                {hangoutsView === "map" ? (
-                  <HangoutsMap
-                    hangouts={nearbyHangouts}
-                    userLocation={location}
-                    onSelectHangout={() => {}}
-                  />
                 ) : (
-                  <div className="space-y-3">
-                    <AnimatePresence>
-                      {nearbyHangouts.map((h, i) => (
-                        <HangoutCard
-                          key={h.id}
-                          hangout={h}
-                          distance={h.distance}
-                          currentUserId={user?.id}
-                          currentUser={user}
-                          index={i}
-                          onRsvp={(h) => rsvpHangout.mutate(h)}
-                          onDelete={(h) => deleteHangout.mutate(h)}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
+                  <>
+                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
+                      👥 People nearby — {nearbyUsers.length}
+                    </p>
+                    <div className="space-y-3">
+                      <AnimatePresence>
+                        {nearbyUsers.map((nu) => (
+                          <NearbyUserCard
+                            key={nu.user_id}
+                            user={nu}
+                            distance={nu.distance}
+                            requestStatus={getRequestStatus(nu.user_id)}
+                            onSendRequest={() => sendRequest.mutate(nu)}
+                            currentUserId={user?.id}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </>
                 )}
               </section>
-            )}
+            </div>
+          )}
 
-            {/* People section */}
-            <section>
-              <NearbyFilters
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                activeInterest={activeInterest}
-                setActiveInterest={setActiveInterest}
-              />
-              {nearbyUsers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <Radar className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h2 className="text-lg font-semibold mb-2">No one nearby</h2>
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    Nobody within {RADIUS_KM}km right now — but you can still drop a hangout!
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
-                    👥 People nearby — {nearbyUsers.length}
-                  </p>
-                  <div className="space-y-3">
-                    <AnimatePresence>
-                      {nearbyUsers.map((nu) => (
-                        <NearbyUserCard
-                          key={nu.user_id}
-                          user={nu}
-                          distance={nu.distance}
-                          requestStatus={getRequestStatus(nu.user_id)}
-                          onSendRequest={() => sendRequest.mutate(nu)}
-                          currentUserId={user?.id}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                </>
-              )}
-            </section>
-          </div>
-        )}
-
-        <CreateHangoutDialog
-          open={showCreateHangout}
-          onClose={() => setShowCreateHangout(false)}
-          onSubmit={(data) => createHangout.mutate(data)}
-          isLoading={createHangout.isPending}
-        />
-      </div>
+          <CreateHangoutDialog
+            open={showCreateHangout}
+            onClose={() => setShowCreateHangout(false)}
+            onSubmit={(data) => createHangout.mutate(data)}
+            isLoading={createHangout.isPending}
+          />
+        </div>
+      </PullToRefresh>
     </div>
   );
 }

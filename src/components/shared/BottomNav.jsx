@@ -28,7 +28,7 @@ export default function BottomNav({ pendingCount = 0 }) {
   const activeTab = location.state?.__tab || getActiveTab(location.pathname);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-border safe-area-bottom" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div className="flex items-center justify-around max-w-lg mx-auto px-2 py-2">
         {NAV_ITEMS.map(({ path, icon: Icon, label }) => {
           const isActive = activeTab === path;
