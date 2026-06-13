@@ -1,22 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { formatDistanceToNow } from "date-fns";
-import UserProfileModal from "@/components/profile/UserProfileModal";
 
 export default function FriendCard({ friend, index }) {
-  const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate();
 
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className="flex items-center gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-md transition-shadow duration-300 cursor-pointer"
-        onClick={() => setShowProfile(true)}
-      >
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="flex items-center gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-md transition-shadow duration-300 cursor-pointer"
+      onClick={() => navigate(`/user/${friend.id}`, { state: { from: "/friends", userName: friend.name } })}
+    >
         <UserAvatar
           name={friend.name}
           size="md"
@@ -31,15 +29,6 @@ export default function FriendCard({ friend, index }) {
               : "recently"}
           </p>
         </div>
-      </motion.div>
-
-      <UserProfileModal
-        userId={friend.id}
-        userName={friend.name}
-        distance={null}
-        open={showProfile}
-        onClose={() => setShowProfile(false)}
-      />
-    </>
+    </motion.div>
   );
 }

@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MapPin, UserPlus, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
-import UserProfileModal from "@/components/profile/UserProfileModal";
 
 export default function NearbyUserCard({ user, distance, onSendRequest, requestStatus, currentUserId }) {
-  const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate();
 
   const formatDistance = (d) => {
     if (d < 1) return `${Math.round(d * 1000)}m away`;
@@ -40,12 +40,11 @@ export default function NearbyUserCard({ user, distance, onSendRequest, requestS
   };
 
   return (
-    <>
-      <motion.div
+    <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-        onClick={() => setShowProfile(true)}
+        onClick={() => navigate(`/user/${user.user_id}`, { state: { from: "/", distance, userName: user.user_name } })}
       >
         <UserAvatar
           name={user.user_name}
@@ -66,15 +65,5 @@ export default function NearbyUserCard({ user, distance, onSendRequest, requestS
         </div>
         {statusButton()}
       </motion.div>
-
-      <UserProfileModal
-        userId={user.user_id}
-        userName={user.user_name}
-        distance={distance}
-        open={showProfile}
-        onClose={() => setShowProfile(false)}
-        currentUserId={currentUserId}
-      />
-    </>
   );
 }

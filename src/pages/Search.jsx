@@ -1,15 +1,15 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Badge } from "@/components/ui/badge";
-import UserProfileModal from "@/components/profile/UserProfileModal";
 
 export default function Search() {
   const [query, setQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const navigate = useNavigate();
 
   const { data: allLocations = [], isLoading } = useQuery({
     queryKey: ["allVisibleUsers"],
@@ -52,7 +52,7 @@ export default function Search() {
           <button
             key={u.user_id}
             className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-lg transition-shadow duration-300 text-left"
-            onClick={() => setSelectedUser(u)}
+            onClick={() => navigate(`/user/${u.user_id}`, { state: { from: "/search", userName: u.user_name } })}
           >
             <UserAvatar
               name={u.user_name}
@@ -78,15 +78,6 @@ export default function Search() {
         ))}
       </div>
 
-      {selectedUser && (
-        <UserProfileModal
-          userId={selectedUser.user_id}
-          userName={selectedUser.user_name}
-          distance={null}
-          open={!!selectedUser}
-          onClose={() => setSelectedUser(null)}
-        />
-      )}
     </div>
   );
 }

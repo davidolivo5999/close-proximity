@@ -18,6 +18,7 @@ import Friends from "@/pages/Friends";
 import Requests from "@/pages/Requests";
 import Profile from "@/pages/Profile";
 import Search from "@/pages/Search";
+import UserProfile from "@/pages/UserProfile";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/requests" element={<Requests />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/user/:userId" element={<UserProfile />} />
         </Route>
       </Route>
 
