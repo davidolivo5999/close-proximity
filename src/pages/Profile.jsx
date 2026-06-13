@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { LogOut, Save, Eye, EyeOff } from "lucide-react";
+import { LogOut, Save, Eye, EyeOff, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
@@ -16,6 +16,8 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [isVisible, setIsVisible] = useState(true);
   const [interests, setInterests] = useState([]);
+  const [photos, setPhotos] = useState([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const { data: user } = useQuery({
@@ -53,6 +55,7 @@ export default function Profile() {
       setBio(myLocation.bio || "");
       setIsVisible(myLocation.is_visible !== false);
       setInterests(myLocation.interests || []);
+      setPhotos(myLocation.photos || []);
     }
   }, [myLocation]);
 
@@ -66,10 +69,24 @@ export default function Profile() {
       bio,
       is_visible: isVisible,
       interests,
+      photos,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
     setSaving(false);
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setPhotos((prev) => [...prev, file_url]);
+    setUploadingPhoto(false);
+  };
+
+  const handleRemovePhoto = (url) => {
+    setPhotos((prev) => prev.filter((p) => p !== url));
   };
 
   const handleLogout = () => {
@@ -139,6 +156,38 @@ export default function Profile() {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Photos */}
+        <div>
+          <Label className="text-sm font-medium mb-2 block">Photos</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {photos.map((url, i) => (
+              <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
+                <img src={url} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => handleRemovePhoto(url)}
+                  className="absolute top-1 right-1 h-5 w-5 bg-black/60 rounded-full flex items-center justify-center"
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+              </div>
+            ))}
+            {photos.length < 6 && (
+              <label className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                {uploadingPhoto ? (
+                  <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5 text-muted-foreground mb-1" />
+                    <span className="text-xs text-muted-foreground">Add</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+              </label>
+            )}
           </div>
         </div>
 

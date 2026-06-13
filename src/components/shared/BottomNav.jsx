@@ -1,10 +1,11 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Radar, Users, Bell, UserCircle } from "lucide-react";
+import { Radar, Users, Bell, UserCircle, Search } from "lucide-react";
 
 const NAV_ITEMS = [
   { path: "/", icon: Radar, label: "Nearby" },
   { path: "/friends", icon: Users, label: "Friends" },
+  { path: "/search", icon: Search, label: "Search" },
   { path: "/requests", icon: Bell, label: "Requests" },
   { path: "/profile", icon: UserCircle, label: "Profile" },
 ];

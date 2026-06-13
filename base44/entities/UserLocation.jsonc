@@ -35,6 +35,13 @@
         "type": "string"
       },
       "description": "List of interest tags the user has selected"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs of profile photos uploaded by the user"
     }
   },
   "required": [
