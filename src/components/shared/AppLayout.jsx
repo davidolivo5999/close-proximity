@@ -45,8 +45,8 @@ export default function AppLayout() {
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Scrollable content area — overscroll-contain prevents bubble to body */}
       <div
-        className="flex-1 overflow-y-auto overscroll-contain"
-        style={{ WebkitOverflowScrolling: "touch" }}
+        className="flex-1 overflow-y-auto"
+        style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorY: "contain" }}
       >
         <div className="max-w-lg mx-auto pb-24">
           <Outlet />
