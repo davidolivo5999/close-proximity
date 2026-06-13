@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radar, MapPinOff, RefreshCw } from "lucide-react";
+import { Radar, MapPinOff, RefreshCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PulseRadar from "@/components/shared/PulseRadar";
 import NearbyUserCard from "@/components/nearby/NearbyUserCard";
+import HangoutCard from "@/components/hangouts/HangoutCard";
+import CreateHangoutDialog from "@/components/hangouts/CreateHangoutDialog";
 import { useUserLocation, calculateDistance } from "@/hooks/useLocation";
 
 const RADIUS_KM = 50;
 
 export default function Nearby() {
   const [isScanning, setIsScanning] = useState(false);
+  const [showCreateHangout, setShowCreateHangout] = useState(false);
   const queryClient = useQueryClient();
   const { location, error: locError, loading: locLoading, requestLocation } = useUserLocation();
 
@@ -24,7 +27,6 @@ export default function Nearby() {
   // Broadcast own location
   useEffect(() => {
     if (!location || !user) return;
-
     const broadcast = async () => {
       const existing = await base44.entities.UserLocation.filter({ user_id: user.id });
       const data = {
@@ -43,7 +45,7 @@ export default function Nearby() {
     broadcast();
   }, [location, user]);
 
-  // Get all visible locations
+  // All visible user locations
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
     queryKey: ["nearbyUsers"],
     queryFn: () => base44.entities.UserLocation.filter({ is_visible: true }),
@@ -51,7 +53,15 @@ export default function Nearby() {
     refetchInterval: 15000,
   });
 
-  // Get friend requests I sent or received
+  // All active hangouts
+  const { data: allHangouts = [], refetch: refetchHangouts } = useQuery({
+    queryKey: ["hangouts"],
+    queryFn: () => base44.entities.Hangout.filter({ is_active: true }),
+    enabled: !!location,
+    refetchInterval: 15000,
+  });
+
+  // Friend requests
   const { data: myRequests = [] } = useQuery({
     queryKey: ["myRequests", user?.id],
     queryFn: async () => {
@@ -77,29 +87,90 @@ export default function Nearby() {
         .map((u) => ({
           ...u,
           distance: calculateDistance(
-            location.latitude,
-            location.longitude,
-            u.latitude,
-            u.longitude
+            location.latitude, location.longitude,
+            u.latitude, u.longitude
           ),
         }))
         .filter((u) => u.distance <= RADIUS_KM)
         .sort((a, b) => a.distance - b.distance)
     : [];
 
+  // Filter non-expired hangouts within radius
+  const nearbyHangouts = location
+    ? allHangouts
+        .filter((h) => new Date(h.expires_at) > new Date())
+        .map((h) => ({
+          ...h,
+          distance: calculateDistance(
+            location.latitude, location.longitude,
+            h.latitude, h.longitude
+          ),
+        }))
+        .filter((h) => h.distance <= RADIUS_KM)
+        .sort((a, b) => new Date(a.expires_at) - new Date(b.expires_at))
+    : [];
+
   const sendRequest = useMutation({
-    mutationFn: async (targetUser) => {
-      return base44.entities.FriendRequest.create({
+    mutationFn: async (targetUser) =>
+      base44.entities.FriendRequest.create({
         from_user_id: user.id,
         to_user_id: targetUser.user_id,
         from_user_name: user.full_name,
         to_user_name: targetUser.user_name,
         status: "pending",
-      });
-    },
+      }),
     onSuccess: () => {
       toast.success("Friend request sent!");
       queryClient.invalidateQueries({ queryKey: ["myRequests"] });
+    },
+  });
+
+  const createHangout = useMutation({
+    mutationFn: async ({ title, description, emoji, duration_hours }) => {
+      const expiresAt = new Date(Date.now() + duration_hours * 3600 * 1000).toISOString();
+      return base44.entities.Hangout.create({
+        host_id: user.id,
+        host_name: user.full_name,
+        title,
+        description,
+        emoji,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        expires_at: expiresAt,
+        duration_hours,
+        attendee_ids: [],
+        attendee_names: [],
+        is_active: true,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Hangout created! Friends nearby can see it.");
+      setShowCreateHangout(false);
+      queryClient.invalidateQueries({ queryKey: ["hangouts"] });
+    },
+  });
+
+  const rsvpHangout = useMutation({
+    mutationFn: async (hangout) => {
+      const ids = [...(hangout.attendee_ids || []), user.id];
+      const names = [...(hangout.attendee_names || []), user.full_name];
+      return base44.entities.Hangout.update(hangout.id, {
+        attendee_ids: ids,
+        attendee_names: names,
+      });
+    },
+    onSuccess: () => {
+      toast.success("You're going! 🎉");
+      queryClient.invalidateQueries({ queryKey: ["hangouts"] });
+    },
+  });
+
+  const deleteHangout = useMutation({
+    mutationFn: (hangout) =>
+      base44.entities.Hangout.update(hangout.id, { is_active: false }),
+    onSuccess: () => {
+      toast("Hangout cancelled.");
+      queryClient.invalidateQueries({ queryKey: ["hangouts"] });
     },
   });
 
@@ -108,34 +179,46 @@ export default function Nearby() {
     requestLocation();
     setTimeout(() => {
       refetchLocations();
+      refetchHangouts();
       setIsScanning(false);
     }, 2500);
-  }, [requestLocation, refetchLocations]);
+  }, [requestLocation, refetchLocations, refetchHangouts]);
 
   useEffect(() => {
-    if (!location) {
-      handleScan();
-    }
+    if (!location) handleScan();
   }, []);
 
   return (
     <div className="px-5 pt-14">
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Discover</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">People nearby right now</p>
+          <p className="text-sm text-muted-foreground mt-0.5">People &amp; hangouts nearby</p>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full h-10 w-10"
-          onClick={handleScan}
-          disabled={isScanning || locLoading}
-        >
-          <RefreshCw className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
-        </Button>
+        <div className="flex items-center gap-2">
+          {location && (
+            <Button
+              size="sm"
+              className="rounded-full gap-1.5 px-4 shadow-md shadow-primary/20"
+              onClick={() => setShowCreateHangout(true)}
+            >
+              <Plus className="h-3.5 w-3.5" /> Hangout
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full h-10 w-10"
+            onClick={handleScan}
+            disabled={isScanning || locLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </div>
 
+      {/* No location */}
       {!location && !isScanning && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -146,7 +229,7 @@ export default function Nearby() {
             {locError || "Enable location access to discover people around you"}
           </p>
           <Button onClick={handleScan} className="rounded-full px-8">
-            <Radar className="h-4 w-4 mr-2" /> Enable & Scan
+            <Radar className="h-4 w-4 mr-2" /> Enable &amp; Scan
           </Button>
         </div>
       )}
@@ -154,37 +237,74 @@ export default function Nearby() {
       {isScanning && <PulseRadar isScanning={true} />}
 
       {location && !isScanning && (
-        <div className="space-y-3 mt-6">
-          {nearbyUsers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                <Radar className="h-8 w-8 text-muted-foreground" />
+        <div className="mt-4 space-y-6">
+
+          {/* ── Hangouts section ── */}
+          {nearbyHangouts.length > 0 && (
+            <section>
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
+                🔥 Active Hangouts — {nearbyHangouts.length}
+              </p>
+              <div className="space-y-3">
+                <AnimatePresence>
+                  {nearbyHangouts.map((h, i) => (
+                    <HangoutCard
+                      key={h.id}
+                      hangout={h}
+                      distance={h.distance}
+                      currentUserId={user?.id}
+                      index={i}
+                      onRsvp={(h) => rsvpHangout.mutate(h)}
+                      onDelete={(h) => deleteHangout.mutate(h)}
+                    />
+                  ))}
+                </AnimatePresence>
               </div>
-              <h2 className="text-lg font-semibold mb-2">No one nearby</h2>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                There's nobody within {RADIUS_KM}km right now. Try again later!
-              </p>
-            </div>
-          ) : (
-            <>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-2">
-                {nearbyUsers.length} {nearbyUsers.length === 1 ? "person" : "people"} nearby
-              </p>
-              <AnimatePresence>
-                {nearbyUsers.map((nu) => (
-                  <NearbyUserCard
-                    key={nu.user_id}
-                    user={nu}
-                    distance={nu.distance}
-                    requestStatus={getRequestStatus(nu.user_id)}
-                    onSendRequest={() => sendRequest.mutate(nu)}
-                  />
-                ))}
-              </AnimatePresence>
-            </>
+            </section>
           )}
+
+          {/* ── People section ── */}
+          <section>
+            {nearbyUsers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <Radar className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-lg font-semibold mb-2">No one nearby</h2>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  Nobody within {RADIUS_KM}km right now — but you can still drop a hangout!
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
+                  👥 People nearby — {nearbyUsers.length}
+                </p>
+                <div className="space-y-3">
+                  <AnimatePresence>
+                    {nearbyUsers.map((nu) => (
+                      <NearbyUserCard
+                        key={nu.user_id}
+                        user={nu}
+                        distance={nu.distance}
+                        requestStatus={getRequestStatus(nu.user_id)}
+                        onSendRequest={() => sendRequest.mutate(nu)}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </>
+            )}
+          </section>
         </div>
       )}
+
+      <CreateHangoutDialog
+        open={showCreateHangout}
+        onClose={() => setShowCreateHangout(false)}
+        onSubmit={(data) => createHangout.mutate(data)}
+        isLoading={createHangout.isPending}
+      />
     </div>
   );
 }
