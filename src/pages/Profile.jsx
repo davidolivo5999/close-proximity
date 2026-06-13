@@ -6,7 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { LogOut, Save, Eye, EyeOff, Camera, X } from "lucide-react";
+import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
@@ -96,6 +107,20 @@ export default function Profile() {
 
   const handleLogout = () => {
     base44.auth.logout("/login");
+  };
+
+  const handleDeleteProfile = async () => {
+    if (myLocation) {
+      await base44.entities.UserLocation.delete(myLocation.id);
+    }
+    // Delete friend requests
+    const sent = await base44.entities.FriendRequest.filter({ from_user_id: user.id });
+    const received = await base44.entities.FriendRequest.filter({ to_user_id: user.id });
+    for (const r of [...sent, ...received]) {
+      await base44.entities.FriendRequest.delete(r.id);
+    }
+    toast.success("Profile deleted. Signing you out...");
+    setTimeout(() => base44.auth.logout("/login"), 1500);
   };
 
   return (
@@ -225,13 +250,40 @@ export default function Profile() {
 
       <PastHangouts userId={user?.id} />
 
-      <Button
-        variant="ghost"
-        className="w-full mt-6 mb-8 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
-        onClick={handleLogout}
-      >
-        <LogOut className="h-4 w-4 mr-2" /> Sign Out
-      </Button>
+      <div className="flex flex-col gap-2 mt-6 mb-8">
+        <Button
+          variant="ghost"
+          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4 mr-2" /> Sign Out
+        </Button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" className="w-full text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-xl text-sm">
+              <Trash2 className="h-4 w-4 mr-2" /> Delete Profile
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete your profile?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove your location, photos, interests, and friend connections. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteProfile}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Yes, delete my profile
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
