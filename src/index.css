@@ -85,7 +85,24 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    height: 100%;
+    /* Prevent overscroll rubber-band revealing white outside the app */
+    overscroll-behavior: none;
+    background-color: hsl(var(--background));
+  }
+
   body {
     @apply bg-background text-foreground font-body;
+    height: 100%;
+    /* Lock body to viewport — scrolling happens in child containers */
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    height: 100%;
+    overflow: hidden;
   }
 }

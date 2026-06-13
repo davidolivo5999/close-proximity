@@ -42,9 +42,15 @@ export default function AppLayout() {
   }, [location.pathname, location.state, setTabPath]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto pb-24">
-        <Outlet />
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      {/* Scrollable content area — overscroll-contain prevents bubble to body */}
+      <div
+        className="flex-1 overflow-y-auto overscroll-contain"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <div className="max-w-lg mx-auto pb-24">
+          <Outlet />
+        </div>
       </div>
       <BottomNav pendingCount={pendingRequests.length} />
     </div>

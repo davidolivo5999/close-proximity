@@ -124,7 +124,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="px-5 pt-14">
+    <div className="px-5 pt-6">
       <div className="flex flex-col items-center mb-8">
         <UserAvatar
           name={user?.full_name}

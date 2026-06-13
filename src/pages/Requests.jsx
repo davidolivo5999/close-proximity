@@ -73,65 +73,67 @@ export default function Requests() {
   );
 
   return (
-    <div className="px-5 pt-14">
-      <div className="mb-6">
+    <div>
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3">
         <h1 className="text-2xl font-heading font-bold text-foreground">Requests</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Manage your friend requests</p>
+        <p className="text-sm text-muted-foreground">Manage your friend requests</p>
       </div>
 
-      <Tabs defaultValue="incoming">
-        <TabsList className="w-full bg-muted/50 rounded-xl p-1 mb-4">
-          <TabsTrigger value="incoming" className="flex-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-            <Inbox className="h-4 w-4 mr-1.5" /> Received
-            {incoming.length > 0 && (
-              <span className="ml-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
-                {incoming.length}
-              </span>
+      <div className="px-5 pt-4">
+        <Tabs defaultValue="incoming">
+          <TabsList className="w-full bg-muted/50 rounded-xl p-1 mb-4">
+            <TabsTrigger value="incoming" className="flex-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Inbox className="h-4 w-4 mr-1.5" /> Received
+              {incoming.length > 0 && (
+                <span className="ml-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                  {incoming.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="outgoing" className="flex-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Send className="h-4 w-4 mr-1.5" /> Sent
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="incoming" className="space-y-3 mt-0">
+            {loadingIn ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : incoming.length === 0 ? (
+              <EmptyState icon={Inbox} title="No pending requests" desc="When someone nearby adds you, their request will appear here." />
+            ) : (
+              <AnimatePresence>
+                {incoming.map((r) => (
+                  <RequestCard
+                    key={r.id}
+                    request={r}
+                    type="incoming"
+                    onAccept={() => acceptMutation.mutate(r)}
+                    onReject={() => rejectMutation.mutate(r)}
+                  />
+                ))}
+              </AnimatePresence>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="outgoing" className="flex-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
-            <Send className="h-4 w-4 mr-1.5" /> Sent
-          </TabsTrigger>
-        </TabsList>
+          </TabsContent>
 
-        <TabsContent value="incoming" className="space-y-3 mt-0">
-          {loadingIn ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            </div>
-          ) : incoming.length === 0 ? (
-            <EmptyState icon={Inbox} title="No pending requests" desc="When someone nearby adds you, their request will appear here." />
-          ) : (
-            <AnimatePresence>
-              {incoming.map((r) => (
-                <RequestCard
-                  key={r.id}
-                  request={r}
-                  type="incoming"
-                  onAccept={() => acceptMutation.mutate(r)}
-                  onReject={() => rejectMutation.mutate(r)}
-                />
-              ))}
-            </AnimatePresence>
-          )}
-        </TabsContent>
-
-        <TabsContent value="outgoing" className="space-y-3 mt-0">
-          {loadingOut ? (
-            <div className="flex items-center justify-center py-16">
-              <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            </div>
-          ) : outgoing.length === 0 ? (
-            <EmptyState icon={Send} title="No sent requests" desc="Requests you send to nearby people will appear here." />
-          ) : (
-            <AnimatePresence>
-              {outgoing.map((r) => (
-                <RequestCard key={r.id} request={r} type="outgoing" />
-              ))}
-            </AnimatePresence>
-          )}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="outgoing" className="space-y-3 mt-0">
+            {loadingOut ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : outgoing.length === 0 ? (
+              <EmptyState icon={Send} title="No sent requests" desc="Requests you send to nearby people will appear here." />
+            ) : (
+              <AnimatePresence>
+                {outgoing.map((r) => (
+                  <RequestCard key={r.id} request={r} type="outgoing" />
+                ))}
+              </AnimatePresence>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
