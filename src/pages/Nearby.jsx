@@ -88,6 +88,17 @@ export default function Nearby() {
     refetchInterval: 15000,
   });
 
+  // Blocks
+  const { data: myBlocks = [] } = useQuery({
+    queryKey: ["blocks", user?.id],
+    queryFn: async () => {
+      const blocked = await base44.entities.Block.filter({ blocker_id: user.id });
+      const blockedBy = await base44.entities.Block.filter({ blocked_id: user.id });
+      return [...blocked.map((b) => b.blocked_id), ...blockedBy.map((b) => b.blocker_id)];
+    },
+    enabled: !!user?.id,
+  });
+
   // Friend requests
   const { data: myRequests = [] } = useQuery({
     queryKey: ["myRequests", user?.id],
@@ -111,6 +122,7 @@ export default function Nearby() {
   const nearbyUsers = location
     ? allLocations
         .filter((u) => u.user_id !== user?.id)
+        .filter((u) => !myBlocks.includes(u.user_id))
         .map((u) => ({
           ...u,
           distance: calculateDistance(
@@ -372,6 +384,7 @@ export default function Nearby() {
                         distance={nu.distance}
                         requestStatus={getRequestStatus(nu.user_id)}
                         onSendRequest={() => sendRequest.mutate(nu)}
+                        currentUserId={user?.id}
                       />
                     ))}
                   </AnimatePresence>

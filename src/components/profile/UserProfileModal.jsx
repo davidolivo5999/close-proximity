@@ -1,13 +1,27 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, X, ShieldOff } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
-export default function UserProfileModal({ userId, userName, distance, open, onClose }) {
+export default function UserProfileModal({ userId, userName, distance, open, onClose, currentUserId }) {
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
+  const queryClient = useQueryClient();
+
+  const handleBlock = async () => {
+    await base44.entities.Block.create({ blocker_id: currentUserId, blocked_id: userId });
+    queryClient.invalidateQueries({ queryKey: ["blocks"] });
+    toast.success(`${userName} has been blocked.`);
+    onClose();
+  };
 
   const { data: locationData, isLoading } = useQuery({
     queryKey: ["userProfile", userId],
@@ -105,6 +119,31 @@ export default function UserProfileModal({ userId, userName, distance, open, onC
                   <p className="text-sm text-muted-foreground text-center py-4">No profile info yet.</p>
                 )}
               </>
+            )}
+
+            {/* Block button */}
+            {currentUserId && currentUserId !== userId && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-xl mt-2">
+                    <ShieldOff className="h-4 w-4 mr-2" /> Block {userName}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Block {userName}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      They won't appear in your Discover feed and you won't appear in theirs.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBlock} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Block
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
 
             {!isLoading && !locationData && (

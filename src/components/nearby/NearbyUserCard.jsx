@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
 import UserProfileModal from "@/components/profile/UserProfileModal";
 
-export default function NearbyUserCard({ user, distance, onSendRequest, requestStatus }) {
+export default function NearbyUserCard({ user, distance, onSendRequest, requestStatus, currentUserId }) {
   const [showProfile, setShowProfile] = useState(false);
 
   const formatDistance = (d) => {
@@ -73,6 +73,7 @@ export default function NearbyUserCard({ user, distance, onSendRequest, requestS
         distance={distance}
         open={showProfile}
         onClose={() => setShowProfile(false)}
+        currentUserId={currentUserId}
       />
     </>
   );
