@@ -365,6 +365,7 @@ export default function Nearby() {
                   setSortBy={setSortBy}
                   activeInterest={activeInterest}
                   setActiveInterest={setActiveInterest}
+                  matchCount={nearbyUsers.length}
                 />
                 {nearbyUsers.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
