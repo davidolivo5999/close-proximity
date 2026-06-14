@@ -13,6 +13,16 @@
     },
     "text": {
       "type": "string"
+    },
+    "reactions": {
+      "type": "object",
+      "description": "Map of emoji to array of user IDs who reacted",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": [

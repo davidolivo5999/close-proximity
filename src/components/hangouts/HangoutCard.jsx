@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/shared/UserAvatar";
 import HangoutChat from "./HangoutChat";
+import { base44 } from "@/api/base44Client";
 
 function useCountdown(expiresAt) {
   const [timeLeft, setTimeLeft] = useState("");
@@ -54,7 +55,20 @@ export default function HangoutCard({
   index = 0,
 }) {
   const [chatOpen, setChatOpen] = useState(false);
+  const [msgCount, setMsgCount] = useState(0);
   const { timeLeft, isExpired } = useCountdown(hangout.expires_at);
+
+  // Live message count via real-time subscription
+  useEffect(() => {
+    base44.entities.HangoutMessage.filter({ hangout_id: hangout.id }, "created_date", 200)
+      .then((msgs) => setMsgCount(msgs.length));
+    const unsub = base44.entities.HangoutMessage.subscribe((event) => {
+      if (event.data?.hangout_id !== hangout.id) return;
+      if (event.type === "create") setMsgCount((c) => c + 1);
+      if (event.type === "delete") setMsgCount((c) => Math.max(0, c - 1));
+    });
+    return unsub;
+  }, [hangout.id]);
   const isHost = hangout.host_id === currentUserId;
   const hasRsvped = (hangout.attendee_ids || []).includes(currentUserId);
   const attendeeCount = (hangout.attendee_ids || []).length;
@@ -201,6 +215,11 @@ export default function HangoutCard({
         >
           <MessageCircle className="h-4 w-4" />
           Chat
+          {msgCount > 0 && (
+            <span className="ml-0.5 text-[10px] font-semibold bg-primary/20 text-primary rounded-full px-1.5 py-0.5 leading-none">
+              {msgCount}
+            </span>
+          )}
         </Button>
       </div>
 
