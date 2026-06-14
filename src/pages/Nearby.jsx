@@ -12,6 +12,7 @@ import CreateHangoutDialog from "@/components/hangouts/CreateHangoutDialog";
 import { useUserLocation, calculateDistance } from "@/hooks/useLocation";
 import NearbyFilters from "@/components/nearby/NearbyFilters";
 import { useHangoutNotifications } from "@/hooks/useHangoutNotifications";
+import { useFriendProximityAlerts } from "@/hooks/useFriendProximityAlerts";
 import HangoutsMap from "@/components/hangouts/HangoutsMap";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 
@@ -214,6 +215,13 @@ export default function Nearby() {
   });
 
   useHangoutNotifications({ user, location });
+
+  // Derive accepted friend IDs for proximity alerts
+  const friendIds = myRequests
+    .filter((r) => r.status === "accepted")
+    .map((r) => r.from_user_id === user?.id ? r.to_user_id : r.from_user_id);
+
+  useFriendProximityAlerts({ user, location, friendIds });
 
   const handleScan = useCallback(() => {
     setIsScanning(true);
