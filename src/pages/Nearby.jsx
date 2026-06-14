@@ -15,6 +15,7 @@ import PeopleMap from "@/components/nearby/PeopleMap";
 import { useHangoutNotifications } from "@/hooks/useHangoutNotifications";
 import { useFriendProximityAlerts } from "@/hooks/useFriendProximityAlerts";
 import HangoutsMap from "@/components/hangouts/HangoutsMap";
+import TrendingHangouts from "@/components/hangouts/TrendingHangouts";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 
 const RADIUS_KM = 50;
@@ -312,6 +313,9 @@ export default function Nearby() {
 
           {location && !isScanning && (
             <div className="mt-4 space-y-6">
+
+              {/* Trending section */}
+              <TrendingHangouts hangouts={nearbyHangouts} />
 
               {/* Hangouts section */}
               {nearbyHangouts.length > 0 && (
