@@ -211,7 +211,7 @@ export default function HangoutCard({
                 size="sm"
                 variant="outline"
                 className="rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-                onClick={() => onRsvp(hangout)}
+                onClick={() => { onRsvp(hangout); addToGoogleCalendar(); }}
               >
                 Join Hangout
               </Button>
