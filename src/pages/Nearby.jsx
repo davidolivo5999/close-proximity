@@ -11,6 +11,7 @@ import HangoutCard from "@/components/hangouts/HangoutCard";
 import CreateHangoutDialog from "@/components/hangouts/CreateHangoutDialog";
 import { useUserLocation, calculateDistance } from "@/hooks/useLocation";
 import NearbyFilters from "@/components/nearby/NearbyFilters";
+import PeopleMap from "@/components/nearby/PeopleMap";
 import { useHangoutNotifications } from "@/hooks/useHangoutNotifications";
 import { useFriendProximityAlerts } from "@/hooks/useFriendProximityAlerts";
 import HangoutsMap from "@/components/hangouts/HangoutsMap";
@@ -24,6 +25,7 @@ export default function Nearby() {
   const [sortBy, setSortBy] = useState("distance");
   const [activeInterest, setActiveInterest] = useState(null);
   const [hangoutsView, setHangoutsView] = useState("list");
+  const [peopleView, setPeopleView] = useState("list");
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -367,6 +369,7 @@ export default function Nearby() {
                   setActiveInterest={setActiveInterest}
                   matchCount={nearbyUsers.length}
                 />
+
                 {nearbyUsers.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -379,23 +382,58 @@ export default function Nearby() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
-                      👥 People nearby — {nearbyUsers.length}
-                    </p>
-                    <div className="space-y-3">
-                      <AnimatePresence>
-                        {nearbyUsers.map((nu) => (
-                          <NearbyUserCard
-                            key={nu.user_id}
-                            user={nu}
-                            distance={nu.distance}
-                            requestStatus={getRequestStatus(nu.user_id)}
-                            onSendRequest={() => sendRequest.mutate(nu)}
-                            currentUserId={user?.id}
-                          />
-                        ))}
-                      </AnimatePresence>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                        👥 People nearby — {nearbyUsers.length}
+                      </p>
+                      <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                        <button
+                          onClick={() => setPeopleView("list")}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                            peopleView === "list"
+                              ? "bg-card text-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <List className="h-3 w-3" /> List
+                        </button>
+                        <button
+                          onClick={() => setPeopleView("map")}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                            peopleView === "map"
+                              ? "bg-card text-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <Map className="h-3 w-3" /> Map
+                        </button>
+                      </div>
                     </div>
+
+                    {peopleView === "map" ? (
+                      <div className="relative">
+                        <PeopleMap
+                          users={nearbyUsers}
+                          userLocation={location}
+                          friendIds={friendIds}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <AnimatePresence>
+                          {nearbyUsers.map((nu) => (
+                            <NearbyUserCard
+                              key={nu.user_id}
+                              user={nu}
+                              distance={nu.distance}
+                              requestStatus={getRequestStatus(nu.user_id)}
+                              onSendRequest={() => sendRequest.mutate(nu)}
+                              currentUserId={user?.id}
+                            />
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                    )}
                   </>
                 )}
               </section>
