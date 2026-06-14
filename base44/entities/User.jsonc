@@ -1,17 +1,41 @@
 {
+  "name": "User",
+  "type": "object",
   "properties": {
     "role": {
       "type": "string",
-      "description": "The role of the user in the app",
       "enum": [
         "admin",
         "user"
-      ]
+      ],
+      "default": "user"
+    },
+    "pro_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "pending",
+        "active",
+        "canceled"
+      ],
+      "default": "none",
+      "description": "Current Pro subscription status"
+    },
+    "pro_checkout_id": {
+      "type": "string",
+      "description": "Wix checkout session ID for linking webhook to user"
+    },
+    "pro_subscription_id": {
+      "type": "string",
+      "description": "Wix subscription ID from order_approved webhook"
+    },
+    "pro_plan": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "description": "Which plan the user subscribed to"
     }
-  },
-  "required": [
-    "role"
-  ],
-  "name": "User",
-  "type": "object"
+  }
 }

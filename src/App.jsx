@@ -21,6 +21,7 @@ import Requests from "@/pages/Requests";
 import Profile from "@/pages/Profile";
 import Search from "@/pages/Search";
 import UserProfile from "@/pages/UserProfile";
+import Pro from "@/pages/Pro";
 
 // Fade transition for tab switches
 const PageWrapper = ({ children }) => (
@@ -81,6 +82,7 @@ const AuthenticatedApp = () => {
             <Route path="/friends" element={<PageWrapper><Friends /></PageWrapper>} />
             <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
             <Route path="/requests" element={<PageWrapper><Requests /></PageWrapper>} />
+            <Route path="/pro" element={<PageWrapper><Pro /></PageWrapper>} />
             <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
             <Route path="/user/:userId" element={<SlideWrapper><UserProfile /></SlideWrapper>} />
           </Route>

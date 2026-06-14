@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Radar, Users, Bell, UserCircle, Search } from "lucide-react";
+import { Radar, Users, Bell, UserCircle, Search, Crown } from "lucide-react";
 import { useTabHistory, TAB_ROOTS } from "@/lib/TabHistoryContext";
 
 const NAV_ITEMS = [
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { path: "/friends", icon: Users, label: "Friends" },
   { path: "/search", icon: Search, label: "Search" },
   { path: "/requests", icon: Bell, label: "Requests" },
+  { path: "/pro", icon: Crown, label: "Pro" },
   { path: "/profile", icon: UserCircle, label: "Profile" },
 ];
 
