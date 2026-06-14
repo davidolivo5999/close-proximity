@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, Users, CheckCircle2, Trash2, MessageCircle, CalendarPlus, MapPinCheck } from "lucide-react";
+import { MapPin, Clock, Users, CheckCircle2, Trash2, MessageCircle, CalendarPlus, MapPinCheck, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/shared/UserAvatar";
@@ -75,6 +75,14 @@ export default function HangoutCard({
   const hasCheckedIn = (hangout.checked_in_ids || []).includes(currentUserId);
   const checkedInCount = (hangout.checked_in_ids || []).length;
   const attendeeCount = (hangout.attendee_ids || []).length;
+
+  const shareToLinkedIn = () => {
+    const text = encodeURIComponent(
+      `Join me at "${hangout.emoji || "📍"} ${hangout.title}"${hangout.description ? ` — ${hangout.description}` : ""}. Found on VibeCheck!`
+    );
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${text}`;
+    window.open(url, "_blank");
+  };
 
   const addToGoogleCalendar = () => {
     const start = new Date(hangout.expires_at);
@@ -244,6 +252,15 @@ export default function HangoutCard({
           title="Add to Google Calendar"
         >
           <CalendarPlus className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="rounded-xl gap-1.5 text-muted-foreground hover:text-[#0077b5]"
+          onClick={shareToLinkedIn}
+          title="Share to LinkedIn"
+        >
+          <Share2 className="h-4 w-4" />
         </Button>
         <Button
           size="sm"
