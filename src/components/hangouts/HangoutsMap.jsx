@@ -11,9 +11,12 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-function makeEmojiIcon(emoji) {
+function makeEmojiIcon(emoji, checkedInCount = 0) {
+  const badge = checkedInCount > 0
+    ? `<div style="position:absolute;top:-6px;right:-6px;background:#10b981;color:white;font-size:9px;font-weight:700;font-family:sans-serif;border-radius:99px;padding:1px 4px;border:1.5px solid white;min-width:14px;text-align:center;">${checkedInCount}</div>`
+    : "";
   return L.divIcon({
-    html: `<div style="font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">${emoji}</div>`,
+    html: `<div style="position:relative;display:inline-block;font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">${emoji}${badge}</div>`,
     className: "",
     iconSize: [36, 36],
     iconAnchor: [18, 36],
@@ -63,7 +66,7 @@ export default function HangoutsMap({ hangouts, userLocation, onSelectHangout })
           <Marker
             key={h.id}
             position={[h.latitude, h.longitude]}
-            icon={makeEmojiIcon(h.emoji || "🎉")}
+            icon={makeEmojiIcon(h.emoji || "🎉", (h.checked_in_ids || []).length)}
             eventHandlers={{ click: () => onSelectHangout(h) }}
           >
             <Popup>
@@ -74,6 +77,11 @@ export default function HangoutsMap({ hangouts, userLocation, onSelectHangout })
                 <p className="text-xs text-gray-400 mt-1">
                   {(h.attendee_ids || []).length} going · {h.distance?.toFixed(1)}km away
                 </p>
+                {(h.checked_in_ids || []).length > 0 && (
+                  <p className="text-xs font-medium mt-0.5" style={{ color: "#10b981" }}>
+                    ✅ {(h.checked_in_ids || []).length} checked in
+                  </p>
+                )}
               </div>
             </Popup>
           </Marker>

@@ -216,6 +216,17 @@ export default function Nearby() {
     },
   });
 
+  const checkInHangout = useMutation({
+    mutationFn: async (hangout) => {
+      const ids = [...new Set([...(hangout.checked_in_ids || []), user.id])];
+      return base44.entities.Hangout.update(hangout.id, { checked_in_ids: ids });
+    },
+    onSuccess: () => {
+      toast.success("You've checked in! 📍");
+      queryClient.invalidateQueries({ queryKey: ["hangouts"] });
+    },
+  });
+
   useHangoutNotifications({ user, location });
 
   // Derive accepted friend IDs for proximity alerts
@@ -352,6 +363,7 @@ export default function Nearby() {
                             index={i}
                             onRsvp={(h) => rsvpHangout.mutate(h)}
                             onDelete={(h) => deleteHangout.mutate(h)}
+                            onCheckIn={(h) => checkInHangout.mutate(h)}
                           />
                         ))}
                       </AnimatePresence>

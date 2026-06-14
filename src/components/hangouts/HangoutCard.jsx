@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, Users, CheckCircle2, Trash2, MessageCircle, CalendarPlus } from "lucide-react";
+import { MapPin, Clock, Users, CheckCircle2, Trash2, MessageCircle, CalendarPlus, MapPinCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/shared/UserAvatar";
@@ -52,6 +52,7 @@ export default function HangoutCard({
   currentUser,
   onRsvp,
   onDelete,
+  onCheckIn,
   index = 0,
 }) {
   const [chatOpen, setChatOpen] = useState(false);
@@ -71,6 +72,8 @@ export default function HangoutCard({
   }, [hangout.id]);
   const isHost = hangout.host_id === currentUserId;
   const hasRsvped = (hangout.attendee_ids || []).includes(currentUserId);
+  const hasCheckedIn = (hangout.checked_in_ids || []).includes(currentUserId);
+  const checkedInCount = (hangout.checked_in_ids || []).length;
   const attendeeCount = (hangout.attendee_ids || []).length;
 
   const addToGoogleCalendar = () => {
@@ -170,6 +173,13 @@ export default function HangoutCard({
           </Badge>
         )}
 
+        {checkedInCount > 0 && (
+          <Badge variant="secondary" className="text-xs gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+            <MapPinCheck className="h-3 w-3" />
+            {checkedInCount} here
+          </Badge>
+        )}
+
         {distance != null && (
           <Badge variant="secondary" className="text-xs gap-1">
             <MapPin className="h-3 w-3 text-primary" />
@@ -181,19 +191,47 @@ export default function HangoutCard({
       {/* RSVP + Chat toggle row */}
       <div className="mt-3 flex items-center gap-2">
         {!isHost && !isExpired && (
-          <div className="flex-1">
+          <div className="flex-1 flex items-center gap-2">
             {hasRsvped ? (
-              <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
-                <CheckCircle2 className="h-4 w-4" /> You're going!
-              </div>
+              hasCheckedIn ? (
+                <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
+                  <MapPinCheck className="h-4 w-4" /> Checked in!
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white gap-1.5"
+                  onClick={() => onCheckIn && onCheckIn(hangout)}
+                >
+                  <MapPinCheck className="h-3.5 w-3.5" /> Check in
+                </Button>
+              )
             ) : (
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                 onClick={() => onRsvp(hangout)}
               >
                 Join Hangout
+              </Button>
+            )}
+          </div>
+        )}
+
+        {isHost && !isExpired && (
+          <div className="flex items-center gap-1.5">
+            {hasCheckedIn ? (
+              <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
+                <MapPinCheck className="h-4 w-4" /> You're here!
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white gap-1.5"
+                onClick={() => onCheckIn && onCheckIn(hangout)}
+              >
+                <MapPinCheck className="h-3.5 w-3.5" /> Check in
               </Button>
             )}
           </div>

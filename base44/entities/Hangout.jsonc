@@ -44,6 +44,13 @@
         "type": "string"
       }
     },
+    "checked_in_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User IDs who have confirmed arrival at the hangout location"
+    },
     "is_active": {
       "type": "boolean",
       "default": true
