@@ -23,6 +23,7 @@ import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
 import PrivacyZones from "@/components/profile/PrivacyZones";
+import ExportReport from "@/components/profile/ExportReport";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -251,6 +252,10 @@ export default function Profile() {
       </div>
 
       <PastHangouts userId={user?.id} />
+
+      <div className="mt-4 mb-2">
+        <ExportReport userId={user?.id} />
+      </div>
 
       <div className="flex flex-col gap-2 mt-6 mb-8">
         <Button
