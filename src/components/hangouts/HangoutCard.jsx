@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, Users, CheckCircle2, Trash2, MessageCircle } from "lucide-react";
+import { MapPin, Clock, Users, CheckCircle2, Trash2, MessageCircle, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/shared/UserAvatar";
@@ -58,6 +58,19 @@ export default function HangoutCard({
   const isHost = hangout.host_id === currentUserId;
   const hasRsvped = (hangout.attendee_ids || []).includes(currentUserId);
   const attendeeCount = (hangout.attendee_ids || []).length;
+
+  const addToGoogleCalendar = () => {
+    const start = new Date(hangout.expires_at);
+    // Use created_date as start if available, otherwise start = expires_at - duration
+    const durationMs = (hangout.duration_hours || 1) * 3600 * 1000;
+    const startTime = new Date(start.getTime() - durationMs);
+    const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    const title = encodeURIComponent(`${hangout.emoji || "📍"} ${hangout.title}`);
+    const details = encodeURIComponent(hangout.description || "Hangout on VibeCheck");
+    const dates = `${fmt(startTime)}/${fmt(start)}`;
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`;
+    window.open(url, "_blank");
+  };
 
   const formatDistance = (d) => {
     if (!d && d !== 0) return null;
@@ -171,6 +184,15 @@ export default function HangoutCard({
             )}
           </div>
         )}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="rounded-xl gap-1.5 text-muted-foreground hover:text-blue-600"
+          onClick={addToGoogleCalendar}
+          title="Add to Google Calendar"
+        >
+          <CalendarPlus className="h-4 w-4" />
+        </Button>
         <Button
           size="sm"
           variant={chatOpen ? "secondary" : "ghost"}
