@@ -254,7 +254,7 @@ export default function Nearby() {
   return (
     <div>
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 flex items-center justify-between safe-area-top">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Discover</h1>
           <p className="text-sm text-muted-foreground">People &amp; hangouts nearby</p>

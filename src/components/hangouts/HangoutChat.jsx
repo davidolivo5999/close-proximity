@@ -42,14 +42,38 @@ export default function HangoutChat({ hangoutId, currentUser }) {
   }, [messages]);
 
   const sendMessage = useMutation({
-    mutationFn: () =>
+    mutationFn: (msgText) =>
       base44.entities.HangoutMessage.create({
         hangout_id: hangoutId,
         user_id: currentUser.id,
         user_name: currentUser.full_name,
-        text: text.trim(),
+        text: msgText,
       }),
-    onSuccess: () => setText(""),
+    onMutate: (msgText) => {
+      const optimistic = {
+        id: `optimistic-${Date.now()}`,
+        hangout_id: hangoutId,
+        user_id: currentUser.id,
+        user_name: currentUser.full_name,
+        text: msgText,
+        created_date: new Date().toISOString(),
+        reactions: {},
+        _optimistic: true,
+      };
+      setMessages((prev) => [...prev, optimistic]);
+      setText("");
+      return { optimistic };
+    },
+    onSuccess: (saved, _msgText, ctx) => {
+      // Replace the optimistic message with the real one
+      setMessages((prev) =>
+        prev.map((m) => m.id === ctx.optimistic.id ? saved : m)
+      );
+    },
+    onError: (_err, _msgText, ctx) => {
+      // Remove optimistic message on failure
+      setMessages((prev) => prev.filter((m) => m.id !== ctx.optimistic.id));
+    },
   });
 
   const addReaction = async (msg, emoji) => {
@@ -71,7 +95,7 @@ export default function HangoutChat({ hangoutId, currentUser }) {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (text.trim()) sendMessage.mutate();
+      if (text.trim()) sendMessage.mutate(text.trim());
     }
   };
 
@@ -183,7 +207,7 @@ export default function HangoutChat({ hangoutId, currentUser }) {
           size="icon"
           className="h-9 w-9 rounded-xl flex-shrink-0"
           disabled={!text.trim() || sendMessage.isPending}
-          onClick={() => sendMessage.mutate()}
+          onClick={() => sendMessage.mutate(text.trim())}
         >
           <Send className="h-3.5 w-3.5" />
         </Button>

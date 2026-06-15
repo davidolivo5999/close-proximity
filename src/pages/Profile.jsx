@@ -257,7 +257,7 @@ export default function Profile() {
         <ExportReport userId={user?.id} />
       </div>
 
-      <div className="flex flex-col gap-2 mt-6 mb-8">
+      <div className="flex flex-col gap-2 mt-6" style={{ marginBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}>
         <Button
           variant="ghost"
           className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"

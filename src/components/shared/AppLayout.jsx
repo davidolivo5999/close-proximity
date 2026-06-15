@@ -48,7 +48,7 @@ export default function AppLayout() {
         className="flex-1 overflow-y-auto"
         style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorY: "contain" }}
       >
-        <div className="max-w-lg mx-auto pb-24">
+        <div className="max-w-lg mx-auto pb-24 safe-area-top" style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}>
           <Outlet />
         </div>
       </div>

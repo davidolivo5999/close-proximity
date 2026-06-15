@@ -116,6 +116,11 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Safe area for iPhone notch / Dynamic Island */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 /* Disable text selection on interactive UI elements */
 button, nav, [role="button"] {
   -webkit-user-select: none;

@@ -96,7 +96,7 @@ export default function Requests() {
 
   return (
     <div>
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 safe-area-top">
         <h1 className="text-2xl font-heading font-bold text-foreground">Requests</h1>
         <p className="text-sm text-muted-foreground">Manage your friend requests</p>
       </div>

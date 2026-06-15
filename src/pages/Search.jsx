@@ -24,7 +24,7 @@ export default function Search() {
 
   return (
     <div>
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 safe-area-top">
         <h1 className="text-2xl font-heading font-bold text-foreground">Search</h1>
         <p className="text-sm text-muted-foreground">Find people by name</p>
       </div>
