@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Radar, MapPinOff, RefreshCw, Plus, Map, List, ShieldCheck } from "lucide-react";
@@ -50,6 +50,8 @@ export default function Nearby() {
     useUserLocation(privacyZones);
 
   // Broadcast own location (only when NOT inside a privacy zone)
+  // Use a ref to avoid re-broadcasting unless coords change meaningfully (>10m)
+  const lastBroadcastCoords = useRef(null);
   useEffect(() => {
     if (!user) return;
     if (!location) {
@@ -58,6 +60,17 @@ export default function Nearby() {
       }
       return;
     }
+
+    // Only broadcast if we've moved more than ~10m from last broadcast
+    const prev = lastBroadcastCoords.current;
+    if (prev) {
+      const latDiff = Math.abs(prev.latitude - location.latitude);
+      const lngDiff = Math.abs(prev.longitude - location.longitude);
+      // ~0.0001 degrees ≈ 11 meters
+      if (latDiff < 0.0001 && lngDiff < 0.0001) return;
+    }
+    lastBroadcastCoords.current = { latitude: location.latitude, longitude: location.longitude };
+
     const broadcast = async () => {
       const existing = await base44.entities.UserLocation.filter({ user_id: user.id });
       const data = {
