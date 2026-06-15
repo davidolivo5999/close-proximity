@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, MapPin, Star, Shield, Download, Pencil, Check, Crown, Zap } from "lucide-react";
+import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, Star, Shield, Pencil, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -17,7 +17,6 @@ import PastHangouts from "@/components/profile/PastHangouts";
 import PrivacyZones from "@/components/profile/PrivacyZones";
 import ExportReport from "@/components/profile/ExportReport";
 import ProfileThemePicker, { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
-import { useProStatus } from "@/hooks/useProStatus";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -31,7 +30,6 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
   const [activeTab, setActiveTab] = useState("about");
-  const { isPro } = useProStatus();
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -73,7 +71,7 @@ export default function Profile() {
     setSaving(true);
     await base44.entities.UserLocation.update(myLocation.id, {
       bio, is_visible: isVisible, interests, photos, privacy_zones: privacyZones,
-      profile_theme: isPro ? profileTheme : "default",
+      profile_theme: profileTheme,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
@@ -113,7 +111,7 @@ export default function Profile() {
   return (
     <div style={{ marginBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
       {/* Hero */}
-      <div className={`relative bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === (isPro ? profileTheme : "default"))?.gradient || "from-primary/20 to-accent/20"} pt-10 pb-6 px-5`}>
+      <div className={`relative bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === profileTheme)?.gradient || "from-primary/20 to-accent/20"} pt-10 pb-6 px-5`}>
         <div className="flex flex-col items-center">
           <div className="relative">
             <UserAvatar name={user?.full_name} size="xl" colorIndex={user?.id?.charCodeAt(0) || 0} />
@@ -121,23 +119,6 @@ export default function Profile() {
           </div>
           <h1 className="text-2xl font-heading font-bold mt-3 text-foreground">{user?.full_name}</h1>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
-
-          {/* Go Pro banner */}
-          {!isPro && (
-            <Link
-              to="/pro"
-              className="mt-4 flex items-center gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-semibold px-5 py-2.5 rounded-2xl shadow-lg shadow-orange-400/30 hover:opacity-90 transition-opacity"
-            >
-              <Crown className="h-4 w-4" />
-              Upgrade to Pro
-              <Zap className="h-4 w-4 ml-auto" />
-            </Link>
-          )}
-          {isPro && (
-            <div className="mt-4 flex items-center gap-2 bg-amber-500/20 text-amber-600 text-sm font-semibold px-5 py-2.5 rounded-2xl border border-amber-400/30">
-              <Crown className="h-4 w-4" /> Pro Member
-            </div>
-          )}
 
           {/* Stats row */}
           <div className="flex items-center gap-8 mt-3 bg-card/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-border/50">
@@ -211,16 +192,14 @@ export default function Profile() {
 
             {/* Theme picker card */}
             <div className="bg-card rounded-2xl border border-border p-4">
-              <ProfileThemePicker value={profileTheme} onChange={setProfileTheme} isPro={isPro} />
-              {isPro && (
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="mt-3 text-xs text-primary font-medium"
-                >
-                  {saving ? "Saving..." : "Save theme"}
-                </button>
-              )}
+              <ProfileThemePicker value={profileTheme} onChange={setProfileTheme} />
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="mt-3 text-xs text-primary font-medium"
+              >
+                {saving ? "Saving..." : "Save theme"}
+              </button>
             </div>
 
             {/* Interests card */}
