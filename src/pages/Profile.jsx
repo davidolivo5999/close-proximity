@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, MapPin, Star, Shield, Download, Pencil, Check } from "lucide-react";
+import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, MapPin, Star, Shield, Download, Pencil, Check, Crown, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -121,8 +122,25 @@ export default function Profile() {
           <h1 className="text-2xl font-heading font-bold mt-3 text-foreground">{user?.full_name}</h1>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
 
+          {/* Go Pro banner */}
+          {!isPro && (
+            <Link
+              to="/pro"
+              className="mt-4 flex items-center gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-semibold px-5 py-2.5 rounded-2xl shadow-lg shadow-orange-400/30 hover:opacity-90 transition-opacity"
+            >
+              <Crown className="h-4 w-4" />
+              Upgrade to Pro
+              <Zap className="h-4 w-4 ml-auto" />
+            </Link>
+          )}
+          {isPro && (
+            <div className="mt-4 flex items-center gap-2 bg-amber-500/20 text-amber-600 text-sm font-semibold px-5 py-2.5 rounded-2xl border border-amber-400/30">
+              <Crown className="h-4 w-4" /> Pro Member
+            </div>
+          )}
+
           {/* Stats row */}
-          <div className="flex items-center gap-8 mt-5 bg-card/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-border/50">
+          <div className="flex items-center gap-8 mt-3 bg-card/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-border/50">
             <div className="text-center">
               <p className="text-xl font-bold text-foreground">{friendCount}</p>
               <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Friends</p>
