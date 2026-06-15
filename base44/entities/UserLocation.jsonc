@@ -34,14 +34,19 @@
       "items": {
         "type": "string"
       },
-      "description": "List of interest tags the user has selected"
+      "description": "List of interest tags"
     },
     "photos": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "URLs of profile photos uploaded by the user"
+      "description": "URLs of profile photos"
+    },
+    "profile_theme": {
+      "type": "string",
+      "default": "default",
+      "description": "Pro profile theme ID"
     },
     "privacy_zones": {
       "type": "array",

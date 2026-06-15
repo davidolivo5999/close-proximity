@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import { MapPin, UserPlus, Clock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
+import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 
 export default function NearbyUserCard({ user, distance, onSendRequest, requestStatus, currentUserId }) {
   const navigate = useNavigate();
+  const theme = PROFILE_THEMES.find(t => t.id === user.profile_theme) || PROFILE_THEMES[0];
 
   const formatDistance = (d) => {
     if (d < 1) return `${Math.round(d * 1000)}m away`;
@@ -43,9 +45,11 @@ export default function NearbyUserCard({ user, distance, onSendRequest, requestS
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+        className="overflow-hidden flex items-center gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-lg transition-shadow duration-300 cursor-pointer relative"
         onClick={() => navigate(`/user/${user.user_id}`, { state: { from: "/", distance, userName: user.user_name } })}
       >
+        {/* Theme accent strip */}
+        <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${theme.gradient}`} />
         <UserAvatar
           name={user.user_name}
           size="md"

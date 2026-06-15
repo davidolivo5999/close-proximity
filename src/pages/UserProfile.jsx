@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, ArrowLeft, ShieldOff, X, MessageCircle } from "lucide-react";
+import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 import UserAvatar from "@/components/shared/UserAvatar";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -57,6 +58,7 @@ export default function UserProfile() {
   };
 
   const userName = locationData?.user_name || location.state?.userName || "User";
+  const theme = PROFILE_THEMES.find(t => t.id === locationData?.profile_theme) || PROFILE_THEMES[0];
 
   return (
     <div className="px-5 pt-4 pb-10 max-w-lg mx-auto">
@@ -70,7 +72,7 @@ export default function UserProfile() {
       </button>
 
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl px-6 pt-8 pb-6 flex flex-col items-center text-center mb-5">
+      <div className={`bg-gradient-to-br ${theme.gradient} rounded-3xl px-6 pt-8 pb-6 flex flex-col items-center text-center mb-5`}>
         <UserAvatar
           name={userName}
           size="xl"

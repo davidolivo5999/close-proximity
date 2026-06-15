@@ -15,6 +15,8 @@ import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
 import PrivacyZones from "@/components/profile/PrivacyZones";
 import ExportReport from "@/components/profile/ExportReport";
+import ProfileThemePicker, { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
+import { useProStatus } from "@/hooks/useProStatus";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -24,9 +26,11 @@ export default function Profile() {
   const [photos, setPhotos] = useState([]);
   const [privacyZones, setPrivacyZones] = useState([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [profileTheme, setProfileTheme] = useState("default");
   const [saving, setSaving] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
   const [activeTab, setActiveTab] = useState("about");
+  const { isPro } = useProStatus();
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -59,6 +63,7 @@ export default function Profile() {
       setInterests(myLocation.interests || []);
       setPhotos(myLocation.photos || []);
       setPrivacyZones(myLocation.privacy_zones || []);
+      setProfileTheme(myLocation.profile_theme || "default");
     }
   }, [myLocation]);
 
@@ -67,6 +72,7 @@ export default function Profile() {
     setSaving(true);
     await base44.entities.UserLocation.update(myLocation.id, {
       bio, is_visible: isVisible, interests, photos, privacy_zones: privacyZones,
+      profile_theme: isPro ? profileTheme : "default",
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
@@ -106,7 +112,7 @@ export default function Profile() {
   return (
     <div style={{ marginBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
       {/* Hero */}
-      <div className="relative bg-gradient-to-br from-primary/30 via-accent/20 to-background pt-10 pb-6 px-5">
+      <div className={`relative bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === (isPro ? profileTheme : "default"))?.gradient || "from-primary/20 to-accent/20"} pt-10 pb-6 px-5`}>
         <div className="flex flex-col items-center">
           <div className="relative">
             <UserAvatar name={user?.full_name} size="xl" colorIndex={user?.id?.charCodeAt(0) || 0} />
@@ -182,6 +188,20 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {bio || "No bio yet. Tap Edit to add one."}
                 </p>
+              )}
+            </div>
+
+            {/* Theme picker card */}
+            <div className="bg-card rounded-2xl border border-border p-4">
+              <ProfileThemePicker value={profileTheme} onChange={setProfileTheme} isPro={isPro} />
+              {isPro && (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="mt-3 text-xs text-primary font-medium"
+                >
+                  {saving ? "Saving..." : "Save theme"}
+                </button>
               )}
             </div>
 
