@@ -1,14 +1,13 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Radar, Users, Bell, UserCircle, Search, Crown } from "lucide-react";
+import { Radar, Users, Bell, UserCircle, Search, Crown, MessageCircle } from "lucide-react";
 import { useTabHistory, TAB_ROOTS } from "@/lib/TabHistoryContext";
 
 const NAV_ITEMS = [
   { path: "/", icon: Radar, label: "Nearby" },
   { path: "/friends", icon: Users, label: "Friends" },
-  { path: "/search", icon: Search, label: "Search" },
+  { path: "/messages", icon: MessageCircle, label: "Messages" },
   { path: "/requests", icon: Bell, label: "Requests" },
-  { path: "/pro", icon: Crown, label: "Pro" },
   { path: "/profile", icon: UserCircle, label: "Profile" },
 ];
 
@@ -21,7 +20,7 @@ function getActiveTab(pathname) {
   return "/";
 }
 
-export default function BottomNav({ pendingCount = 0 }) {
+export default function BottomNav({ pendingCount = 0, unreadMessages = 0 }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { getTabPath } = useTabHistory();
@@ -53,6 +52,11 @@ export default function BottomNav({ pendingCount = 0 }) {
                 {label === "Requests" && pendingCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
                     {pendingCount}
+                  </span>
+                )}
+                {label === "Messages" && unreadMessages > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
+                    {unreadMessages}
                   </span>
                 )}
               </div>

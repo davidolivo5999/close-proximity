@@ -1,0 +1,30 @@
+{
+  "name": "DirectMessage",
+  "type": "object",
+  "properties": {
+    "from_user_id": {
+      "type": "string"
+    },
+    "to_user_id": {
+      "type": "string"
+    },
+    "from_user_name": {
+      "type": "string"
+    },
+    "to_user_name": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "from_user_id",
+    "to_user_id",
+    "text"
+  ]
+}

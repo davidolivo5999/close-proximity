@@ -33,6 +33,13 @@ export default function AppLayout() {
     refetchInterval: 10000,
   });
 
+  const { data: unreadMessages = [] } = useQuery({
+    queryKey: ["unreadMessages", user?.id],
+    queryFn: () => base44.entities.DirectMessage.filter({ to_user_id: user.id, read: false }),
+    enabled: !!user?.id,
+    refetchInterval: 10000,
+  });
+
   // Track the current path under each tab so we can restore it
   useEffect(() => {
     const tabRoot = location.state?.__tab || getTabRoot(location.pathname);
@@ -52,7 +59,7 @@ export default function AppLayout() {
           <Outlet />
         </div>
       </div>
-      <BottomNav pendingCount={pendingRequests.length} />
+      <BottomNav pendingCount={pendingRequests.length} unreadMessages={unreadMessages.length} />
     </div>
   );
 }

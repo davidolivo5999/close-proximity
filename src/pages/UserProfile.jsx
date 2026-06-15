@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, ArrowLeft, ShieldOff, X } from "lucide-react";
+import { MapPin, ArrowLeft, ShieldOff, X, MessageCircle } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -138,9 +138,21 @@ export default function UserProfile() {
         <p className="text-sm text-muted-foreground text-center py-10">Profile not available.</p>
       )}
 
-      {/* Block button */}
+      {/* Message button */}
       {currentUser && currentUser.id !== userId && (
         <div className="mt-4">
+          <Button
+            className="w-full rounded-xl gap-2"
+            onClick={() => navigate(`/messages/${userId}`, { state: { peerName: userName } })}
+          >
+            <MessageCircle className="h-4 w-4" /> Message {userName}
+          </Button>
+        </div>
+      )}
+
+      {/* Block button */}
+      {currentUser && currentUser.id !== userId && (
+        <div className="mt-2">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" className="w-full text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-xl">
