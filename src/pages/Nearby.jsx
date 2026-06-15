@@ -93,14 +93,14 @@ export default function Nearby() {
     queryKey: ["nearbyUsers"],
     queryFn: () => base44.entities.UserLocation.filter({ is_visible: true }),
     enabled: !!location,
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 
   const { data: allHangouts = [], refetch: refetchHangouts } = useQuery({
     queryKey: ["hangouts"],
     queryFn: () => base44.entities.Hangout.filter({ is_active: true }),
     enabled: !!location,
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 
   const { data: myBlocks = [] } = useQuery({

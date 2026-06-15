@@ -30,14 +30,14 @@ export default function AppLayout() {
         status: "pending",
       }),
     enabled: !!user?.id,
-    refetchInterval: 10000,
+    refetchInterval: 60000,
   });
 
   const { data: unreadMessages = [] } = useQuery({
     queryKey: ["unreadMessages", user?.id],
     queryFn: () => base44.entities.DirectMessage.filter({ to_user_id: user.id, read: false }),
     enabled: !!user?.id,
-    refetchInterval: 10000,
+    refetchInterval: 60000,
   });
 
   // Track the current path under each tab so we can restore it
