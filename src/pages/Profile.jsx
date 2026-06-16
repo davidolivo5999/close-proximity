@@ -21,6 +21,7 @@ import ProfileThemePicker, { PROFILE_THEMES } from "@/components/profile/Profile
 export default function Profile() {
   const queryClient = useQueryClient();
   const [bio, setBio] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [isVisible, setIsVisible] = useState(true);
   const [interests, setInterests] = useState([]);
   const [photos, setPhotos] = useState([]);
@@ -31,6 +32,7 @@ export default function Profile() {
   const [profileTheme, setProfileTheme] = useState("default");
   const [saving, setSaving] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
+  const [editingName, setEditingName] = useState(false);
   const [activeTab, setActiveTab] = useState("about");
 
   const { data: user } = useQuery({
@@ -77,6 +79,7 @@ export default function Profile() {
   useEffect(() => {
     if (myLocation) {
       setBio(myLocation.bio || "");
+      setDisplayName(myLocation.user_name || user?.full_name || "");
       setIsVisible(myLocation.is_visible !== false);
       setInterests(myLocation.interests || []);
       setPhotos(myLocation.photos || []);
@@ -84,7 +87,7 @@ export default function Profile() {
       setProfileTheme(myLocation.profile_theme || "default");
       setAvatarUrl(myLocation.avatar_url || "");
     }
-  }, [myLocation]);
+  }, [myLocation, user]);
 
   const handleSave = async () => {
     if (!myLocation) { toast.error("Please enable location first on the Discover tab"); return; }
@@ -92,12 +95,13 @@ export default function Profile() {
     await base44.entities.UserLocation.update(myLocation.id, {
       bio, is_visible: isVisible, interests, photos, privacy_zones: privacyZones,
       profile_theme: profileTheme, avatar_url: avatarUrl,
-      user_name: user?.full_name,
+      user_name: displayName || user?.full_name,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
     setSaving(false);
     setEditingBio(false);
+    setEditingName(false);
   };
 
   const handlePhotoUpload = async (e) => {
@@ -184,7 +188,7 @@ export default function Profile() {
             </label>
             <div className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background ${isVisible ? "bg-emerald-500" : "bg-muted-foreground"}`} />
           </div>
-          <h1 className="text-2xl font-heading font-bold mt-3 text-foreground">{user?.full_name}</h1>
+          <h1 className="text-2xl font-heading font-bold mt-3 text-foreground">{displayName || user?.full_name}</h1>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
 
           {/* Stats row */}
@@ -230,6 +234,31 @@ export default function Profile() {
         {/* ABOUT TAB */}
         {activeTab === "about" && (
           <>
+            {/* Display name card */}
+            <div className="bg-card rounded-2xl border border-border p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold text-foreground">Display Name</p>
+                <button
+                  onClick={() => editingName ? handleSave() : setEditingName(true)}
+                  className="flex items-center gap-1 text-xs text-primary font-medium"
+                >
+                  {editingName ? <><Check className="h-3.5 w-3.5" /> Save</> : <><Pencil className="h-3.5 w-3.5" /> Edit</>}
+                </button>
+              </div>
+              {editingName ? (
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full rounded-xl bg-muted/50 border-0 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  autoFocus
+                  placeholder="Your display name"
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">{displayName || user?.full_name || "No name set"}</p>
+              )}
+            </div>
+
             {/* Bio card */}
             <div className="bg-card rounded-2xl border border-border p-4">
               <div className="flex items-center justify-between mb-3">
