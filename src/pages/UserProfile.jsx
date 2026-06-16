@@ -20,6 +20,15 @@ export default function UserProfile() {
   const queryClient = useQueryClient();
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
+  // back destination passed via navigation state, fallback to "/"
+  const backTo = location.state?.from || "/";
+  const backTab = location.state?.from || "/";
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => base44.auth.me(),
+  });
+
   // Photo likes
   const { data: myLikes = [] } = useQuery({
     queryKey: ["photoLikes", currentUser?.id, userId],
@@ -49,15 +58,6 @@ export default function UserProfile() {
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["photoLikes", currentUser?.id, userId] }),
-  });
-
-  // back destination passed via navigation state, fallback to "/"
-  const backTo = location.state?.from || "/";
-  const backTab = location.state?.from || "/";
-
-  const { data: currentUser } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
   });
 
   const { data: locationData, isLoading } = useQuery({
