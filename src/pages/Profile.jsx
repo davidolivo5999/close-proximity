@@ -53,14 +53,10 @@ export default function Profile() {
         if (bScore !== aScore) return bScore - aScore;
         return new Date(b.updated_date) - new Date(a.updated_date);
       });
-      const primary = sorted[0];
-      for (const dup of sorted.slice(1)) {
-        base44.entities.UserLocation.delete(dup.id).catch(() => {});
-      }
-      return primary;
+      return sorted[0] || null;
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -74,8 +70,9 @@ export default function Profile() {
       return sent.length + received.length;
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   useEffect(() => {

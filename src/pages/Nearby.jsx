@@ -296,7 +296,10 @@ export default function Nearby() {
   }, [requestLocation, refetchLocations, refetchHangouts]);
 
   useEffect(() => {
-    if (!location) handleScan();
+    // Only scan if we genuinely have no location yet; don't refetch on every mount
+    if (!location && !locLoading && !insideZone) {
+      handleScan();
+    }
   }, []);
 
   return (
