@@ -21,6 +21,8 @@ export default function Conversation() {
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch peer location if name not in state
