@@ -22,6 +22,15 @@ export default function AppLayout() {
     queryFn: () => base44.auth.me(),
   });
 
+  const { data: myLocation } = useQuery({
+    queryKey: ["myLocation", user?.id],
+    queryFn: async () => {
+      const locs = await base44.entities.UserLocation.filter({ user_id: user.id });
+      return locs[0] || null;
+    },
+    enabled: !!user?.id,
+  });
+
   const { data: pendingRequests = [] } = useQuery({
     queryKey: ["pendingRequests", user?.id],
     queryFn: () =>
@@ -59,7 +68,7 @@ export default function AppLayout() {
           <Outlet />
         </div>
       </div>
-      <BottomNav pendingCount={pendingRequests.length} unreadMessages={unreadMessages.length} />
+      <BottomNav pendingCount={pendingRequests.length} unreadMessages={unreadMessages.length} currentUser={user} userAvatarUrl={myLocation?.avatar_url} />
     </div>
   );
 }

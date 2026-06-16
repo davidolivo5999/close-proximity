@@ -16,6 +16,7 @@ export default function Conversation() {
   const [text, setText] = useState("");
 
   const peerName = routerLocation.state?.peerName || "User";
+  const peerAvatarUrl = routerLocation.state?.peerAvatarUrl || null;
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -111,7 +112,7 @@ export default function Conversation() {
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <UserAvatar name={peerName} size="sm" colorIndex={peerId.charCodeAt(0)} />
+        <UserAvatar name={peerName} size="sm" colorIndex={peerId.charCodeAt(0)} avatarUrl={peerAvatarUrl} />
         <span className="font-semibold text-foreground">{peerName}</span>
       </div>
 

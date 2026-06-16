@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Radar, Users, Bell, UserCircle, Search, Crown, MessageCircle } from "lucide-react";
 import { useTabHistory, TAB_ROOTS } from "@/lib/TabHistoryContext";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 const NAV_ITEMS = [
   { path: "/", icon: Radar, label: "Nearby" },
@@ -20,7 +21,7 @@ function getActiveTab(pathname) {
   return "/";
 }
 
-export default function BottomNav({ pendingCount = 0, unreadMessages = 0 }) {
+export default function BottomNav({ pendingCount = 0, unreadMessages = 0, currentUser = null, userAvatarUrl = null }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { getTabPath } = useTabHistory();
@@ -43,12 +44,21 @@ export default function BottomNav({ pendingCount = 0, unreadMessages = 0 }) {
               }`}
             >
               <div className="relative">
-                <Icon
-                  className={`h-5 w-5 transition-transform duration-200 ${
-                    isActive ? "scale-110" : ""
-                  }`}
-                  strokeWidth={isActive ? 2.5 : 1.8}
-                />
+                {label === "Profile" && (userAvatarUrl || currentUser) ? (
+                  <div className={`h-5 w-5 rounded-full overflow-hidden ring-2 transition-all duration-200 ${isActive ? "ring-primary scale-110" : "ring-transparent"}`}>
+                    <img
+                      src={userAvatarUrl}
+                      alt="me"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.style.display = "none"; e.target.parentElement.classList.add("bg-primary"); }}
+                    />
+                  </div>
+                ) : (
+                  <Icon
+                    className={`h-5 w-5 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
+                    strokeWidth={isActive ? 2.5 : 1.8}
+                  />
+                )}
                 {label === "Requests" && pendingCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-1">
                     {pendingCount}

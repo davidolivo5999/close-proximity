@@ -65,6 +65,21 @@ export default function Messages() {
     return Array.from(map.values()).sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
   }, [sent, received, user]);
 
+  const peerIds = conversations.map((c) => c.peerId);
+  const { data: peerLocations = [] } = useQuery({
+    queryKey: ["peerLocations", peerIds.join(",")],
+    queryFn: () => Promise.all(
+      peerIds.map((id) => base44.entities.UserLocation.filter({ user_id: id }).then((r) => r[0] || null))
+    ),
+    enabled: peerIds.length > 0,
+    staleTime: 60000,
+  });
+  const peerAvatarMap = useMemo(() => {
+    const map = {};
+    peerIds.forEach((id, i) => { if (peerLocations[i]?.avatar_url) map[id] = peerLocations[i].avatar_url; });
+    return map;
+  }, [peerLocations, peerIds]);
+
   return (
     <div>
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 safe-area-top">
@@ -88,10 +103,10 @@ export default function Messages() {
             {conversations.map((conv, i) => (
               <button
                 key={conv.peerId}
-                onClick={() => navigate(`/messages/${conv.peerId}`, { state: { peerName: conv.peerName } })}
+                onClick={() => navigate(`/messages/${conv.peerId}`, { state: { peerName: conv.peerName, peerAvatarUrl: peerAvatarMap[conv.peerId] } })}
                 className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/60 transition-colors text-left"
               >
-                <UserAvatar name={conv.peerName} size="md" colorIndex={i} />
+                <UserAvatar name={conv.peerName} size="md" colorIndex={i} avatarUrl={peerAvatarMap[conv.peerId]} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-sm text-foreground truncate">{conv.peerName}</span>

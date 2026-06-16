@@ -189,7 +189,7 @@ export default function UserProfile() {
         <div className="mt-4">
           <Button
             className="w-full rounded-xl gap-2"
-            onClick={() => navigate(`/messages/${userId}`, { state: { peerName: userName } })}
+            onClick={() => navigate(`/messages/${userId}`, { state: { peerName: userName, peerAvatarUrl: locationData?.avatar_url } })}
           >
             <MessageCircle className="h-4 w-4" /> Message {userName}
           </Button>
