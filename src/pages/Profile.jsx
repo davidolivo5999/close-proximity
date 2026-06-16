@@ -96,12 +96,15 @@ export default function Profile() {
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !myLocation) return;
+    // Reset input so same file can be re-selected
+    e.target.value = "";
     setUploadingPhoto(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     const saved = [...photos, file_url];
     setPhotos(saved);
     await base44.entities.UserLocation.update(myLocation.id, { photos: saved });
-    queryClient.invalidateQueries({ queryKey: ["myLocation"] });
+    // Update cache directly instead of invalidating to avoid useEffect resetting state
+    queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, photos: saved } : old);
     setUploadingPhoto(false);
     toast.success("Photo saved!");
   };
@@ -109,6 +112,7 @@ export default function Profile() {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    e.target.value = "";
     // Show local preview instantly
     const localUrl = URL.createObjectURL(file);
     setAvatarUrl(localUrl);
@@ -118,7 +122,8 @@ export default function Profile() {
     setAvatarUrl(file_url);
     if (myLocation) {
       await base44.entities.UserLocation.update(myLocation.id, { avatar_url: file_url });
-      queryClient.invalidateQueries({ queryKey: ["myLocation"] });
+      // Update cache directly to avoid state reset race condition
+      queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, avatar_url: file_url } : old);
       toast.success("Profile picture updated!");
     }
     setUploadingAvatar(false);
@@ -129,7 +134,7 @@ export default function Profile() {
     const updated = photos.filter((p) => p !== url);
     setPhotos(updated);
     await base44.entities.UserLocation.update(myLocation.id, { photos: updated });
-    queryClient.invalidateQueries({ queryKey: ["myLocation"] });
+    queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, photos: updated } : old);
   };
   const handleLogout = () => base44.auth.logout("/login");
 
@@ -317,7 +322,7 @@ export default function Profile() {
                       <span className="text-xs text-muted-foreground">Add photo</span>
                     </>
                   )}
-                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
                 </label>
               )}
             </div>
