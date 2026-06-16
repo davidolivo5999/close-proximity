@@ -12,7 +12,7 @@ export default function PastHangouts({ userId }) {
       // Hangouts hosted by user
       const hosted = await base44.entities.Hangout.filter({ host_id: userId });
       // All hangouts to find ones user attended (no direct filter on array field)
-      const all = await base44.entities.Hangout.list("-created_date", 200);
+      const all = await base44.entities.Hangout.list("-created_date", 100);
       const attended = all.filter(
         (h) => h.host_id !== userId && (h.attendee_ids || []).includes(userId)
       );
@@ -23,6 +23,9 @@ export default function PastHangouts({ userId }) {
         .sort((a, b) => new Date(b.expires_at) - new Date(a.expires_at));
     },
     enabled: !!userId,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   if (isLoading) {
