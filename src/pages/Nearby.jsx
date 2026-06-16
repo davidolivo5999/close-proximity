@@ -91,7 +91,7 @@ export default function Nearby() {
       const rec = myLocationRecordRef.current;
       const data = {
         user_id: user.id,
-        user_name: user.full_name || "",
+        user_name: rec?.user_name || user.full_name || "",
         latitude: location.latitude,
         longitude: location.longitude,
         is_visible: true,
