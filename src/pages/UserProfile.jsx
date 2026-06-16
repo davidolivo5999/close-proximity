@@ -36,6 +36,9 @@ export default function UserProfile() {
     queryKey: ["photoLikes", currentUser?.id, userId],
     queryFn: () => base44.entities.PhotoLike.filter({ photo_owner_id: userId }),
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const likedUrls = new Set(
@@ -69,6 +72,9 @@ export default function UserProfile() {
       return results[0] || null;
     },
     enabled: !!userId,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   // distance is passed via navigation state if available

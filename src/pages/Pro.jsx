@@ -54,7 +54,7 @@ export default function Pro() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("status") === "confirming") {
       setPolling(true);
-      // Poll every 3s for up to 30s
+      // Poll every 5s for up to 30s
       let attempts = 0;
       const interval = setInterval(async () => {
         attempts++;
@@ -65,14 +65,14 @@ export default function Pro() {
           setPolling(false);
           window.history.replaceState({}, "", "/pro");
           toast.success("You're now a Pro member! 🎉");
-        } else if (attempts >= 10) {
+        } else if (attempts >= 6) {
           clearInterval(interval);
           setPolling(false);
         }
-      }, 3000);
+      }, 5000);
       return () => clearInterval(interval);
     }
-  }, []);
+  }, [queryClient]);
 
   const handleUpgrade = async (plan) => {
     setLoading(plan);
