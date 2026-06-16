@@ -89,7 +89,6 @@ const AuthenticatedApp = () => {
           <Route path="/messages/:peerId" element={<SlideWrapper><Conversation /></SlideWrapper>} />
           <Route path="/user/:userId" element={<SlideWrapper><UserProfile /></SlideWrapper>} />
         </Route>
-
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </AnimatePresence>
