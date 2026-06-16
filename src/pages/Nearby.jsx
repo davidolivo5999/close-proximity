@@ -76,10 +76,10 @@ export default function Nearby() {
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user; }, [user]);
 
-  // Broadcast own location — add debounce to avoid multiple updates
+  // Broadcast own location — add debounce to avoid multiple updates (only for authenticated users)
   useEffect(() => {
     const user = userRef.current;
-    if (!user) return;
+    if (!user?.id) return;
 
     if (!location) {
       const rec = myLocationRecordRef.current;
@@ -127,7 +127,6 @@ export default function Nearby() {
   const { data: allHangouts = [], refetch: refetchHangouts } = useQuery({
     queryKey: ["hangouts"],
     queryFn: () => base44.entities.Hangout.filter({ is_active: true }),
-    enabled: !!location,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
@@ -256,6 +255,10 @@ export default function Nearby() {
 
   const rsvpHangout = useMutation({
     mutationFn: async (hangout) => {
+      if (!user?.id) {
+        toast.error("Sign in to RSVP to hangouts");
+        return;
+      }
       const ids = [...(hangout.attendee_ids || []), user.id];
       const names = [...(hangout.attendee_names || []), myLocationRecord?.user_name || user.full_name];
       return base44.entities.Hangout.update(hangout.id, {
@@ -280,6 +283,10 @@ export default function Nearby() {
 
   const checkInHangout = useMutation({
     mutationFn: async (hangout) => {
+      if (!user?.id) {
+        toast.error("Sign in to check in to hangouts");
+        return;
+      }
       const ids = [...new Set([...(hangout.checked_in_ids || []), user.id])];
       return base44.entities.Hangout.update(hangout.id, { checked_in_ids: ids });
     },
