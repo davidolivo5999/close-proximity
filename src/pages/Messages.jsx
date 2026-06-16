@@ -110,9 +110,6 @@ export default function Messages() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-sm text-foreground truncate">{conv.peerName}</span>
-                    <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
-                      {formatDistanceToNow(new Date(conv.lastDate), { addSuffix: true })}
-                    </span>
                   </div>
                   <p className="text-sm text-muted-foreground truncate">{conv.lastText}</p>
                 </div>
