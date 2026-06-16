@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Heart } from "lucide-react";
@@ -18,17 +18,21 @@ export default function Friends() {
   const { data: acceptedRequests = [], isLoading } = useQuery({
     queryKey: ["friends", user?.id],
     queryFn: async () => {
-      const sent = await base44.entities.FriendRequest.filter({
-        from_user_id: user.id,
-        status: "accepted",
-      });
-      const received = await base44.entities.FriendRequest.filter({
-        to_user_id: user.id,
-        status: "accepted",
-      });
+      const [sent, received] = await Promise.all([
+        base44.entities.FriendRequest.filter({
+          from_user_id: user.id,
+          status: "accepted",
+        }),
+        base44.entities.FriendRequest.filter({
+          to_user_id: user.id,
+          status: "accepted",
+        }),
+      ]);
       return [...sent, ...received];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const friends = acceptedRequests.map((r) => {
@@ -42,9 +46,11 @@ export default function Friends() {
 
   const friendIds = friends.map((f) => f.id);
   const { data: allLocations = [] } = useQuery({
-    queryKey: ["allUserLocations"],
-    queryFn: () => base44.entities.UserLocation.list(),
-    staleTime: 60000,
+    queryKey: ["allUserLocations", friendIds.join(",")],
+    queryFn: () => base44.entities.UserLocation.filter({ user_id: { $in: friendIds } }),
+    enabled: friendIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const avatarMap = useMemo(() => {
     const map = {};
