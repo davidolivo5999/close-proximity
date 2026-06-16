@@ -36,6 +36,8 @@ export default function Profile() {
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: myLocation } = useQuery({
@@ -56,6 +58,8 @@ export default function Profile() {
       return primary;
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: friendCount = 0 } = useQuery({
@@ -66,6 +70,8 @@ export default function Profile() {
       return sent.length + received.length;
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
