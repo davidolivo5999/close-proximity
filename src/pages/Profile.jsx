@@ -92,7 +92,7 @@ export default function Profile() {
   }, [myLocation, user]);
 
   const handleSave = async () => {
-    if (!isAdmin(user)) { toast.error("Only the app admin can modify the profile"); return; }
+    if (!isAuthenticated(user)) { toast.error("Sign in to save profile changes"); return; }
     if (!myLocation) { toast.error("Please enable location first on the Discover tab"); return; }
     setSaving(true);
     await base44.entities.UserLocation.update(myLocation.id, {
@@ -108,6 +108,7 @@ export default function Profile() {
   };
 
   const handlePhotoUpload = async (e) => {
+    if (!isAuthenticated(user)) { toast.error("Sign in to upload photos"); return; }
     const file = e.target.files[0];
     if (!file || !myLocation) return;
     // Reset input so same file can be re-selected
@@ -124,6 +125,7 @@ export default function Profile() {
   };
 
   const handleAvatarUpload = async (e) => {
+    if (!isAuthenticated(user)) { toast.error("Sign in to upload a profile picture"); return; }
     const file = e.target.files[0];
     if (!file) return;
     e.target.value = "";
