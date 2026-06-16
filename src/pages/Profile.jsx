@@ -40,6 +40,7 @@ export default function Profile() {
     queryFn: () => base44.auth.me(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: myLocation } = useQuery({
@@ -58,6 +59,7 @@ export default function Profile() {
     enabled: !!user?.id,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: friendCount = 0 } = useQuery({

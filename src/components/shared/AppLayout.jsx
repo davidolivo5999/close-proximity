@@ -22,6 +22,7 @@ export default function AppLayout() {
     queryFn: () => base44.auth.me(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: myLocation } = useQuery({
@@ -41,6 +42,7 @@ export default function AppLayout() {
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: pendingRequests = [] } = useQuery({
