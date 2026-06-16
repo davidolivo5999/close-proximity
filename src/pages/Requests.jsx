@@ -23,7 +23,9 @@ export default function Requests() {
         status: "pending",
       }),
     enabled: !!user?.id,
-    refetchInterval: 10000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: outgoing = [], isLoading: loadingOut } = useQuery({
@@ -34,6 +36,9 @@ export default function Requests() {
         status: "pending",
       }),
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const invalidateAll = () => {

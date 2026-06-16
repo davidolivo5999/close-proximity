@@ -27,12 +27,18 @@ export default function Conversation() {
     queryKey: ["conv-sent", user?.id, peerId],
     queryFn: () => base44.entities.DirectMessage.filter({ from_user_id: user.id, to_user_id: peerId }),
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: received = [] } = useQuery({
     queryKey: ["conv-received", user?.id, peerId],
     queryFn: () => base44.entities.DirectMessage.filter({ from_user_id: peerId, to_user_id: user.id }),
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   // Real-time updates instead of polling

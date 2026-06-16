@@ -19,12 +19,18 @@ export default function Messages() {
     queryKey: ["dms-sent", user?.id],
     queryFn: () => base44.entities.DirectMessage.filter({ from_user_id: user.id }),
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: received = [] } = useQuery({
     queryKey: ["dms-received", user?.id],
     queryFn: () => base44.entities.DirectMessage.filter({ to_user_id: user.id }),
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   // Real-time updates instead of polling
@@ -67,9 +73,12 @@ export default function Messages() {
 
   const peerIds = conversations.map((c) => c.peerId);
   const { data: allLocations = [] } = useQuery({
-    queryKey: ["allUserLocations"],
-    queryFn: () => base44.entities.UserLocation.list(),
-    staleTime: 60000,
+    queryKey: ["allUserLocations", peerIds.join(",")],
+    queryFn: () => peerIds.length > 0 ? base44.entities.UserLocation.filter({ user_id: { $in: peerIds } }) : Promise.resolve([]),
+    enabled: peerIds.length > 0,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
   const peerAvatarMap = useMemo(() => {
     const map = {};
