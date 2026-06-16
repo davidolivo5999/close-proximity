@@ -85,17 +85,25 @@ export default function Profile() {
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Show local preview instantly
+    const localUrl = URL.createObjectURL(file);
+    setPhotos((prev) => [...prev, localUrl]);
     setUploadingPhoto(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setPhotos((prev) => [...prev, file_url]);
+    URL.revokeObjectURL(localUrl);
+    setPhotos((prev) => prev.map((p) => (p === localUrl ? file_url : p)));
     setUploadingPhoto(false);
   };
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Show local preview instantly
+    const localUrl = URL.createObjectURL(file);
+    setAvatarUrl(localUrl);
     setUploadingAvatar(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    URL.revokeObjectURL(localUrl);
     setAvatarUrl(file_url);
     if (myLocation) {
       await base44.entities.UserLocation.update(myLocation.id, { avatar_url: file_url });
