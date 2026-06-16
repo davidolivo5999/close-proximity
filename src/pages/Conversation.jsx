@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { format } from "date-fns";
@@ -61,6 +61,11 @@ export default function Conversation() {
     (a, b) => new Date(a.created_date) - new Date(b.created_date)
   );
 
+  // ID of the last sent message that has been read by the peer
+  const lastReadSentId = [...sent]
+    .filter((m) => m.read && !m._optimistic)
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0]?.id;
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
@@ -115,7 +120,7 @@ export default function Conversation() {
         {messages.map((msg) => {
           const isMe = msg.from_user_id === user?.id;
           return (
-            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+            <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
               <div
                 className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                   isMe
@@ -128,6 +133,12 @@ export default function Conversation() {
                   {format(new Date(msg.created_date), "h:mm a")}
                 </p>
               </div>
+              {isMe && msg.id === lastReadSentId && (
+                <div className="flex items-center gap-1 mt-0.5 justify-end">
+                  <CheckCheck className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] text-muted-foreground">Read</span>
+                </div>
+              )}
             </div>
           );
         })}
