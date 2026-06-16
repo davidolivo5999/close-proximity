@@ -62,5 +62,17 @@
     "latitude",
     "longitude",
     "expires_at"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "data.host_id": "{{user.id}}"
+    },
+    "read": {},
+    "update": {
+      "data.host_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.host_id": "{{user.id}}"
+    }
+  }
 }

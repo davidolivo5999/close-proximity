@@ -14,5 +14,26 @@
   "required": [
     "blocker_id",
     "blocked_id"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "data.blocker_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.blocker_id": "{{user.id}}"
+        },
+        {
+          "data.blocked_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "data.blocker_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.blocker_id": "{{user.id}}"
+    }
+  }
 }
