@@ -23,12 +23,7 @@ export default function FriendCard({ friend, index }) {
         />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">{friend.name}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Friends since{" "}
-            {friend.since
-              ? formatDistanceToNow(new Date(friend.since), { addSuffix: false }) + " ago"
-              : "recently"}
-          </p>
+
         </div>
     </motion.div>
   );
