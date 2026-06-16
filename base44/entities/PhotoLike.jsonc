@@ -1,0 +1,35 @@
+{
+  "name": "PhotoLike",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The user who liked the photo"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "URL of the liked photo"
+    },
+    "photo_owner_id": {
+      "type": "string",
+      "description": "ID of the user who owns the photo"
+    }
+  },
+  "required": [
+    "user_id",
+    "photo_url",
+    "photo_owner_id"
+  ],
+  "rls": {
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "read": {},
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}

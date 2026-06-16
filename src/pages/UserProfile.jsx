@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, ArrowLeft, ShieldOff, X, MessageCircle } from "lucide-react";
+import { MapPin, ArrowLeft, ShieldOff, X, MessageCircle, Heart } from "lucide-react";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 import UserAvatar from "@/components/shared/UserAvatar";
 import {
@@ -19,6 +19,37 @@ export default function UserProfile() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
+
+  // Photo likes
+  const { data: myLikes = [] } = useQuery({
+    queryKey: ["photoLikes", currentUser?.id, userId],
+    queryFn: () => base44.entities.PhotoLike.filter({ photo_owner_id: userId }),
+    enabled: !!userId,
+  });
+
+  const likedUrls = new Set(
+    myLikes.filter(l => l.user_id === currentUser?.id).map(l => l.photo_url)
+  );
+  const likeCounts = myLikes.reduce((acc, l) => {
+    acc[l.photo_url] = (acc[l.photo_url] || 0) + 1;
+    return acc;
+  }, {});
+
+  const toggleLike = useMutation({
+    mutationFn: async (photoUrl) => {
+      const existing = myLikes.find(l => l.user_id === currentUser.id && l.photo_url === photoUrl);
+      if (existing) {
+        await base44.entities.PhotoLike.delete(existing.id);
+      } else {
+        await base44.entities.PhotoLike.create({
+          user_id: currentUser.id,
+          photo_url: photoUrl,
+          photo_owner_id: userId,
+        });
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["photoLikes", currentUser?.id, userId] }),
+  });
 
   // back destination passed via navigation state, fallback to "/"
   const backTo = location.state?.from || "/";
@@ -118,13 +149,25 @@ export default function UserProfile() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Photos</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {locationData.photos.map((url, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setLightboxPhoto(url)}
-                    className="aspect-square rounded-xl overflow-hidden"
-                  >
-                    <img src={url} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
-                  </button>
+                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden group">
+                    <button
+                      onClick={() => setLightboxPhoto(url)}
+                      className="w-full h-full"
+                    >
+                      <img src={url} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+                    </button>
+                    {currentUser && currentUser.id !== userId && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleLike.mutate(url); }}
+                        className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1"
+                      >
+                        <Heart className={`h-3 w-3 ${likedUrls.has(url) ? "fill-rose-500 text-rose-500" : "text-white"}`} />
+                        {likeCounts[url] > 0 && (
+                          <span className="text-white text-[10px] font-semibold">{likeCounts[url]}</span>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -186,9 +229,23 @@ export default function UserProfile() {
           onClick={() => setLightboxPhoto(null)}
         >
           <img src={lightboxPhoto} alt="" className="max-w-full max-h-full rounded-xl object-contain" />
-          <button className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white">
+          <button
+            className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white"
+            onClick={() => setLightboxPhoto(null)}
+          >
             <X className="h-5 w-5" />
           </button>
+          {currentUser && currentUser.id !== userId && (
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleLike.mutate(lightboxPhoto); }}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2.5"
+            >
+              <Heart className={`h-5 w-5 ${likedUrls.has(lightboxPhoto) ? "fill-rose-500 text-rose-500" : "text-white"}`} />
+              <span className="text-white font-semibold text-sm">
+                {likedUrls.has(lightboxPhoto) ? "Liked" : "Like"} {likeCounts[lightboxPhoto] > 0 ? `· ${likeCounts[lightboxPhoto]}` : ""}
+              </span>
+            </button>
+          )}
         </div>
       )}
     </div>
