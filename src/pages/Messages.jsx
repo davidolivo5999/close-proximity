@@ -66,19 +66,18 @@ export default function Messages() {
   }, [sent, received, user]);
 
   const peerIds = conversations.map((c) => c.peerId);
-  const { data: peerLocations = [] } = useQuery({
-    queryKey: ["peerLocations", peerIds.join(",")],
-    queryFn: () => Promise.all(
-      peerIds.map((id) => base44.entities.UserLocation.filter({ user_id: id }).then((r) => r[0] || null))
-    ),
-    enabled: peerIds.length > 0,
+  const { data: allLocations = [] } = useQuery({
+    queryKey: ["allUserLocations"],
+    queryFn: () => base44.entities.UserLocation.list(),
     staleTime: 60000,
   });
   const peerAvatarMap = useMemo(() => {
     const map = {};
-    peerIds.forEach((id, i) => { if (peerLocations[i]?.avatar_url) map[id] = peerLocations[i].avatar_url; });
+    for (const loc of allLocations) {
+      if (peerIds.includes(loc.user_id) && loc.avatar_url) map[loc.user_id] = loc.avatar_url;
+    }
     return map;
-  }, [peerLocations, peerIds]);
+  }, [allLocations, peerIds]);
 
   return (
     <div>

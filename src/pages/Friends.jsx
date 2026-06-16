@@ -41,19 +41,18 @@ export default function Friends() {
   });
 
   const friendIds = friends.map((f) => f.id);
-  const { data: friendLocations = [] } = useQuery({
-    queryKey: ["friendLocations", friendIds.join(",")],
-    queryFn: () => Promise.all(
-      friendIds.map((id) => base44.entities.UserLocation.filter({ user_id: id }).then((r) => r[0] || null))
-    ),
-    enabled: friendIds.length > 0,
+  const { data: allLocations = [] } = useQuery({
+    queryKey: ["allUserLocations"],
+    queryFn: () => base44.entities.UserLocation.list(),
     staleTime: 60000,
   });
   const avatarMap = useMemo(() => {
     const map = {};
-    friendIds.forEach((id, i) => { if (friendLocations[i]?.avatar_url) map[id] = friendLocations[i].avatar_url; });
+    for (const loc of allLocations) {
+      if (friendIds.includes(loc.user_id) && loc.avatar_url) map[loc.user_id] = loc.avatar_url;
+    }
     return map;
-  }, [friendLocations, friendIds]);
+  }, [allLocations, friendIds]);
 
   const filtered = friends.filter((f) =>
     f.name?.toLowerCase().includes(search.toLowerCase())
