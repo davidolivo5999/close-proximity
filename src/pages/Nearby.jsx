@@ -55,6 +55,8 @@ export default function Nearby() {
       return primary;
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const privacyZones = myLocationRecord?.privacy_zones || [];
@@ -92,12 +94,18 @@ export default function Nearby() {
         longitude: location.longitude,
         is_visible: true,
       };
-      if (myLocationRecord) {
-        await base44.entities.UserLocation.update(myLocationRecord.id, data);
-      } else {
+      try {
+        if (myLocationRecord) {
+          await base44.entities.UserLocation.update(myLocationRecord.id, data);
+        } else {
+          await base44.entities.UserLocation.create(data);
+          queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
+        }
+      } catch {
+        // Record may have been deleted (duplicate cleanup); create a fresh one
         await base44.entities.UserLocation.create(data);
+        queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
       }
-      queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
     };
     broadcast();
   }, [location, user, insideZone, myLocationRecord]);
