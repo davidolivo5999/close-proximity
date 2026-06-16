@@ -16,7 +16,7 @@ export default function Conversation() {
   const [text, setText] = useState("");
 
   const peerNameFromState = routerLocation.state?.peerName;
-  const peerAvatarUrl = routerLocation.state?.peerAvatarUrl || null;
+  const peerAvatarUrlFromState = routerLocation.state?.peerAvatarUrl;
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -37,6 +37,7 @@ export default function Conversation() {
   });
 
   const peerName = peerNameFromState || peerLocation?.user_name || "User";
+  const peerAvatarUrl = peerAvatarUrlFromState || peerLocation?.avatar_url || null;
 
   const { data: sent = [] } = useQuery({
     queryKey: ["conv-sent", user?.id, peerId],
