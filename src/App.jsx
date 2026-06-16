@@ -78,18 +78,16 @@ const AuthenticatedApp = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<PageWrapper><Nearby /></PageWrapper>} />
-            <Route path="/friends" element={<PageWrapper><Friends /></PageWrapper>} />
-            <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
-            <Route path="/requests" element={<PageWrapper><Requests /></PageWrapper>} />
-            <Route path="/pro" element={<PageWrapper><Pro /></PageWrapper>} />
-            <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
-            <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
-            <Route path="/messages/:peerId" element={<SlideWrapper><Conversation /></SlideWrapper>} />
-            <Route path="/user/:userId" element={<SlideWrapper><UserProfile /></SlideWrapper>} />
-          </Route>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<PageWrapper><Nearby /></PageWrapper>} />
+          <Route path="/friends" element={<PageWrapper><Friends /></PageWrapper>} />
+          <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
+          <Route path="/requests" element={<PageWrapper><Requests /></PageWrapper>} />
+          <Route path="/pro" element={<PageWrapper><Pro /></PageWrapper>} />
+          <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
+          <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
+          <Route path="/messages/:peerId" element={<SlideWrapper><Conversation /></SlideWrapper>} />
+          <Route path="/user/:userId" element={<SlideWrapper><UserProfile /></SlideWrapper>} />
         </Route>
 
         <Route path="*" element={<PageNotFound />} />

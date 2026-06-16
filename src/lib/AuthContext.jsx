@@ -5,6 +5,16 @@ import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
 
+// Generate or retrieve anonymous user ID for guest users
+const getAnonymousUserId = () => {
+  let anonId = localStorage.getItem('anonUserId');
+  if (!anonId) {
+    anonId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('anonUserId', anonId);
+  }
+  return anonId;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -42,6 +52,9 @@ export const AuthProvider = ({ children }) => {
         if (appParams.token) {
           await checkUserAuth();
         } else {
+          // Allow anonymous guest access with generated user ID
+          const anonId = getAnonymousUserId();
+          setUser({ id: anonId, full_name: 'Guest' });
           setIsLoadingAuth(false);
           setIsAuthenticated(false);
           setAuthChecked(true);
