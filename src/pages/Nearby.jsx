@@ -34,12 +34,25 @@ export default function Nearby() {
     queryFn: () => base44.auth.me(),
   });
 
-  // Fetch user's own location record to get privacy zones
+  // Fetch user's own location record — pick the most recently updated one and delete duplicates
   const { data: myLocationRecord } = useQuery({
     queryKey: ["myLocation", user?.id],
     queryFn: async () => {
       const locs = await base44.entities.UserLocation.filter({ user_id: user.id });
-      return locs[0] || null;
+      if (locs.length === 0) return null;
+      // Sort by updated_date descending, prefer records with photos/avatar
+      const sorted = [...locs].sort((a, b) => {
+        const aScore = (a.photos?.length || 0) + (a.avatar_url ? 10 : 0);
+        const bScore = (b.photos?.length || 0) + (b.avatar_url ? 10 : 0);
+        if (bScore !== aScore) return bScore - aScore;
+        return new Date(b.updated_date) - new Date(a.updated_date);
+      });
+      const primary = sorted[0];
+      // Delete all duplicates silently
+      for (const dup of sorted.slice(1)) {
+        base44.entities.UserLocation.delete(dup.id).catch(() => {});
+      }
+      return primary;
     },
     enabled: !!user?.id,
   });
