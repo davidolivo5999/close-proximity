@@ -1,10 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 export function useUserLocation(privacyZones = []) {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [insideZone, setInsideZone] = useState(null); // zone name if blocked
+
+  // Keep zones in a ref so requestLocation is stable and never recreated
+  const privacyZonesRef = useRef(privacyZones);
+  useEffect(() => { privacyZonesRef.current = privacyZones; }, [privacyZones]);
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -20,8 +24,8 @@ export function useUserLocation(privacyZones = []) {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // Check if inside any privacy zone
-        const blocked = privacyZones.find((zone) => {
+        // Check if inside any privacy zone (use ref to avoid stale closure)
+        const blocked = privacyZonesRef.current.find((zone) => {
           const distM = calculateDistance(lat, lon, zone.latitude, zone.longitude) * 1000;
           return distM <= zone.radius_m;
         });
@@ -41,7 +45,8 @@ export function useUserLocation(privacyZones = []) {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
-  }, [privacyZones]);
+  // Stable — never recreated; reads privacyZones via ref
+  }, []);
 
   return { location, error, loading, insideZone, requestLocation };
 }

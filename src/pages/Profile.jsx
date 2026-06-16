@@ -67,8 +67,10 @@ export default function Profile() {
   const { data: friendCount = 0 } = useQuery({
     queryKey: ["friendCount", user?.id],
     queryFn: async () => {
-      const sent = await base44.entities.FriendRequest.filter({ from_user_id: user.id, status: "accepted" });
-      const received = await base44.entities.FriendRequest.filter({ to_user_id: user.id, status: "accepted" });
+      const [sent, received] = await Promise.all([
+        base44.entities.FriendRequest.filter({ from_user_id: user.id, status: "accepted" }),
+        base44.entities.FriendRequest.filter({ to_user_id: user.id, status: "accepted" }),
+      ]);
       return sent.length + received.length;
     },
     enabled: !!user?.id,

@@ -29,7 +29,14 @@ export default function AppLayout() {
     queryFn: async () => {
       const locs = await base44.entities.UserLocation.filter({ user_id: user.id });
       if (locs.length === 0) return null;
-      return [...locs].sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+      // Same sort as Nearby so both share the same cache correctly
+      const sorted = [...locs].sort((a, b) => {
+        const aScore = (a.photos?.length || 0) + (a.avatar_url ? 10 : 0);
+        const bScore = (b.photos?.length || 0) + (b.avatar_url ? 10 : 0);
+        if (bScore !== aScore) return bScore - aScore;
+        return new Date(b.updated_date) - new Date(a.updated_date);
+      });
+      return sorted[0];
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
