@@ -126,31 +126,39 @@ export default function UserProfile() {
       )}
 
       {!isLoading && locationData && (
-        <div className="space-y-5 bg-card rounded-2xl border border-border p-5">
-          {locationData.bio && (
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">About</p>
-              <p className="text-sm text-foreground leading-relaxed">{locationData.bio}</p>
+        <div className="space-y-4">
+          {/* Bio + Interests card */}
+          {(locationData.bio || locationData.interests?.length > 0) && (
+            <div className="space-y-4 bg-card rounded-2xl border border-border p-5">
+              {locationData.bio && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">About</p>
+                  <p className="text-sm text-foreground leading-relaxed">{locationData.bio}</p>
+                </div>
+              )}
+
+              {locationData.interests?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Interests</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {locationData.interests.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="rounded-full text-xs">{tag}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {locationData.interests?.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Interests</p>
-              <div className="flex flex-wrap gap-1.5">
-                {locationData.interests.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="rounded-full text-xs">{tag}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
+          {/* Photos section */}
           {locationData.photos?.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Photos</p>
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Photos · {locationData.photos.length}
+              </p>
               <div className="grid grid-cols-3 gap-1.5">
                 {locationData.photos.map((url, i) => (
-                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden group">
+                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
                     <button
                       onClick={() => setLightboxPhoto(url)}
                       className="w-full h-full"
