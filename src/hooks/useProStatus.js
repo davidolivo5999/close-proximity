@@ -5,6 +5,8 @@ export function useProStatus() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const isPro = user?.pro_status === "active";

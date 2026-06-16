@@ -25,14 +25,14 @@ export default function Conversation() {
     refetchOnWindowFocus: false,
   });
 
-  // Fetch peer location if name not in state
+  // Fetch peer location only if name not in state
   const { data: peerLocation } = useQuery({
     queryKey: ["peerProfile", peerId],
     queryFn: async () => {
       const results = await base44.entities.UserLocation.filter({ user_id: peerId });
       return results[0] || null;
     },
-    enabled: !!peerId && !peerNameFromState,
+    enabled: !!peerId && !peerNameFromState && !peerAvatarUrlFromState,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
