@@ -46,7 +46,7 @@ export default function Conversation() {
       return results[0] || null;
     },
     enabled: !!peerId && !peerNameFromState && !peerAvatarUrlFromState,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });

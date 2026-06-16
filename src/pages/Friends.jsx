@@ -13,6 +13,9 @@ export default function Friends() {
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   const { data: acceptedRequests = [], isLoading } = useQuery({
@@ -51,6 +54,7 @@ export default function Friends() {
     enabled: friendIds.length > 0,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
   const avatarMap = useMemo(() => {
     const map = {};

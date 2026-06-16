@@ -11,11 +11,8 @@ export default function PastHangouts({ userId }) {
     queryFn: async () => {
       // Hangouts hosted by user
       const hosted = await base44.entities.Hangout.filter({ host_id: userId });
-      // All hangouts to find ones user attended (no direct filter on array field)
-      const all = await base44.entities.Hangout.list("-created_date", 100);
-      const attended = all.filter(
-        (h) => h.host_id !== userId && (h.attendee_ids || []).includes(userId)
-      );
+      // Hangouts user attended
+      const attended = await base44.entities.Hangout.filter({ attendee_ids: { $in: [userId] } });
       const combined = [...hosted, ...attended];
       // Past = expired or inactive
       return combined
