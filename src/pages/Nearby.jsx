@@ -135,6 +135,7 @@ export default function Nearby() {
     ? allLocations
         .filter((u) => u.user_id !== user?.id)
         .filter((u) => !myBlocks.includes(u.user_id))
+        .filter((u, idx, arr) => arr.findIndex(x => x.user_id === u.user_id) === idx)
         .map((u) => ({
           ...u,
           distance: calculateDistance(
