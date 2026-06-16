@@ -87,7 +87,7 @@ export default function Nearby() {
     const broadcast = async () => {
       const data = {
         user_id: user.id,
-        user_name: user.full_name,
+        user_name: user.full_name || "",
         latitude: location.latitude,
         longitude: location.longitude,
         is_visible: true,
@@ -97,6 +97,7 @@ export default function Nearby() {
       } else {
         await base44.entities.UserLocation.create(data);
       }
+      queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
     };
     broadcast();
   }, [location, user, insideZone, myLocationRecord]);

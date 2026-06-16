@@ -92,6 +92,7 @@ export default function Profile() {
     await base44.entities.UserLocation.update(myLocation.id, {
       bio, is_visible: isVisible, interests, photos, privacy_zones: privacyZones,
       profile_theme: profileTheme, avatar_url: avatarUrl,
+      user_name: user?.full_name,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
