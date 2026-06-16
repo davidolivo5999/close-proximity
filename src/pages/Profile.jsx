@@ -84,15 +84,19 @@ export default function Profile() {
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    // Show local preview instantly
+    if (!file || !myLocation) return;
     const localUrl = URL.createObjectURL(file);
-    setPhotos((prev) => [...prev, localUrl]);
+    const newPhotos = [...photos, localUrl];
+    setPhotos(newPhotos);
     setUploadingPhoto(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     URL.revokeObjectURL(localUrl);
-    setPhotos((prev) => prev.map((p) => (p === localUrl ? file_url : p)));
+    const saved = newPhotos.map((p) => (p === localUrl ? file_url : p));
+    setPhotos(saved);
+    await base44.entities.UserLocation.update(myLocation.id, { photos: saved });
+    queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     setUploadingPhoto(false);
+    toast.success("Photo saved!");
   };
 
   const handleAvatarUpload = async (e) => {
@@ -113,7 +117,13 @@ export default function Profile() {
     setUploadingAvatar(false);
   };
 
-  const handleRemovePhoto = (url) => setPhotos((prev) => prev.filter((p) => p !== url));
+  const handleRemovePhoto = async (url) => {
+    if (!myLocation) return;
+    const updated = photos.filter((p) => p !== url);
+    setPhotos(updated);
+    await base44.entities.UserLocation.update(myLocation.id, { photos: updated });
+    queryClient.invalidateQueries({ queryKey: ["myLocation"] });
+  };
   const handleLogout = () => base44.auth.logout("/login");
 
   const handleDeleteProfile = async () => {
@@ -304,11 +314,7 @@ export default function Profile() {
                 </label>
               )}
             </div>
-            {photos.length > 0 && (
-              <Button onClick={handleSave} disabled={saving} size="sm" className="mt-3 rounded-xl">
-                {saving ? "Saving..." : "Save photos"}
-              </Button>
-            )}
+
           </div>
         )}
 
