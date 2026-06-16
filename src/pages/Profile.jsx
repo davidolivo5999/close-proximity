@@ -152,7 +152,7 @@ export default function Profile() {
     await base44.entities.UserLocation.update(myLocation.id, { photos: updated });
     queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, photos: updated } : old);
   };
-  const handleLogout = () => base44.auth.logout("/login");
+  const handleLogout = () => base44.auth.logout("/");
 
   const handleDeleteProfile = async () => {
     if (myLocation) await base44.entities.UserLocation.delete(myLocation.id);
