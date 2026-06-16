@@ -118,7 +118,6 @@ export default function Nearby() {
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
     queryKey: ["nearbyUsers"],
     queryFn: () => base44.entities.UserLocation.filter({ is_visible: true }),
-    enabled: !!location,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
