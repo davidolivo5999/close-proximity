@@ -20,15 +20,20 @@ export default function AppLayout() {
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: myLocation } = useQuery({
     queryKey: ["myLocation", user?.id],
     queryFn: async () => {
       const locs = await base44.entities.UserLocation.filter({ user_id: user.id });
-      return locs[0] || null;
+      if (locs.length === 0) return null;
+      return [...locs].sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: pendingRequests = [] } = useQuery({

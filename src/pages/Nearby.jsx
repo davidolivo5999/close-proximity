@@ -32,6 +32,8 @@ export default function Nearby() {
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Fetch user's own location record — pick the most recently updated one and delete duplicates
@@ -131,8 +133,10 @@ export default function Nearby() {
   const { data: myBlocks = [] } = useQuery({
     queryKey: ["blocks", user?.id],
     queryFn: async () => {
-      const blocked = await base44.entities.Block.filter({ blocker_id: user.id });
-      const blockedBy = await base44.entities.Block.filter({ blocked_id: user.id });
+      const [blocked, blockedBy] = await Promise.all([
+        base44.entities.Block.filter({ blocker_id: user.id }),
+        base44.entities.Block.filter({ blocked_id: user.id }),
+      ]);
       return [...blocked.map((b) => b.blocked_id), ...blockedBy.map((b) => b.blocker_id)];
     },
     enabled: !!user?.id,
@@ -142,8 +146,10 @@ export default function Nearby() {
   const { data: myRequests = [] } = useQuery({
     queryKey: ["myRequests", user?.id],
     queryFn: async () => {
-      const sent = await base44.entities.FriendRequest.filter({ from_user_id: user.id });
-      const received = await base44.entities.FriendRequest.filter({ to_user_id: user.id });
+      const [sent, received] = await Promise.all([
+        base44.entities.FriendRequest.filter({ from_user_id: user.id }),
+        base44.entities.FriendRequest.filter({ to_user_id: user.id }),
+      ]);
       return [...sent, ...received];
     },
     enabled: !!user?.id,
