@@ -221,7 +221,7 @@ export default function Nearby() {
       const expiresAt = new Date(Date.now() + duration_hours * 3600 * 1000).toISOString();
       return base44.entities.Hangout.create({
         host_id: user.id,
-        host_name: user.full_name,
+        host_name: myLocationRecord?.user_name || user.full_name,
         title,
         description,
         emoji,
@@ -244,7 +244,7 @@ export default function Nearby() {
   const rsvpHangout = useMutation({
     mutationFn: async (hangout) => {
       const ids = [...(hangout.attendee_ids || []), user.id];
-      const names = [...(hangout.attendee_names || []), user.full_name];
+      const names = [...(hangout.attendee_names || []), myLocationRecord?.user_name || user.full_name];
       return base44.entities.Hangout.update(hangout.id, {
         attendee_ids: ids,
         attendee_names: names,

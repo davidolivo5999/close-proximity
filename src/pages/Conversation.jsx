@@ -25,6 +25,19 @@ export default function Conversation() {
     refetchOnWindowFocus: false,
   });
 
+  // Fetch current user's location for display name
+  const { data: myLocation } = useQuery({
+    queryKey: ["myLocation", user?.id],
+    queryFn: async () => {
+      const results = await base44.entities.UserLocation.filter({ user_id: user.id });
+      return results[0] || null;
+    },
+    enabled: !!user?.id,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+  });
+
   // Fetch peer location only if name not in state
   const { data: peerLocation } = useQuery({
     queryKey: ["peerProfile", peerId],
@@ -40,6 +53,7 @@ export default function Conversation() {
 
   const peerName = peerNameFromState || peerLocation?.user_name || "User";
   const peerAvatarUrl = peerAvatarUrlFromState || peerLocation?.avatar_url || null;
+  const myDisplayName = myLocation?.user_name || user?.full_name;
 
   const { data: sent = [] } = useQuery({
     queryKey: ["conv-sent", user?.id, peerId],
@@ -100,7 +114,7 @@ export default function Conversation() {
       base44.entities.DirectMessage.create({
         from_user_id: user.id,
         to_user_id: peerId,
-        from_user_name: user.full_name,
+        from_user_name: myDisplayName,
         to_user_name: peerName,
         text: msgText,
         read: false,
