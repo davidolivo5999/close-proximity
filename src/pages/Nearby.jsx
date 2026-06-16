@@ -72,7 +72,6 @@ export default function Nearby() {
     lastBroadcastCoords.current = { latitude: location.latitude, longitude: location.longitude };
 
     const broadcast = async () => {
-      const existing = await base44.entities.UserLocation.filter({ user_id: user.id });
       const data = {
         user_id: user.id,
         user_name: user.full_name,
@@ -80,14 +79,14 @@ export default function Nearby() {
         longitude: location.longitude,
         is_visible: true,
       };
-      if (existing.length > 0) {
-        await base44.entities.UserLocation.update(existing[0].id, data);
+      if (myLocationRecord) {
+        await base44.entities.UserLocation.update(myLocationRecord.id, data);
       } else {
         await base44.entities.UserLocation.create(data);
       }
     };
     broadcast();
-  }, [location, user, insideZone]);
+  }, [location, user, insideZone, myLocationRecord]);
 
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
     queryKey: ["nearbyUsers"],
