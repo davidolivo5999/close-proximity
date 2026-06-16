@@ -14,7 +14,7 @@ export default function Search() {
   const { data: allLocations = [], isLoading } = useQuery({
     queryKey: ["allVisibleUsers"],
     queryFn: () => base44.entities.UserLocation.filter({ is_visible: true }),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });

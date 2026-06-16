@@ -72,7 +72,7 @@ export default function UserProfile() {
       return results[0] || null;
     },
     enabled: !!userId,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });

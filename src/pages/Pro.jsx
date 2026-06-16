@@ -54,7 +54,7 @@ export default function Pro() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("status") === "confirming") {
       setPolling(true);
-      // Poll every 5s for up to 30s
+      // Poll every 10s for up to 60s (reduced frequency)
       let attempts = 0;
       const interval = setInterval(async () => {
         attempts++;
@@ -69,7 +69,7 @@ export default function Pro() {
           clearInterval(interval);
           setPolling(false);
         }
-      }, 5000);
+      }, 10000);
       return () => clearInterval(interval);
     }
   }, [queryClient]);
