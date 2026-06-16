@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/shared/UserAvatar";
@@ -18,15 +19,29 @@ export default function Messages() {
     queryKey: ["dms-sent", user?.id],
     queryFn: () => base44.entities.DirectMessage.filter({ from_user_id: user.id }),
     enabled: !!user?.id,
-    refetchInterval: 8000,
   });
 
   const { data: received = [] } = useQuery({
     queryKey: ["dms-received", user?.id],
     queryFn: () => base44.entities.DirectMessage.filter({ to_user_id: user.id }),
     enabled: !!user?.id,
-    refetchInterval: 8000,
   });
+
+  // Real-time updates instead of polling
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsub = base44.entities.DirectMessage.subscribe((event) => {
+      const msg = event.data;
+      if (!msg) return;
+      if (msg.from_user_id === user.id) {
+        queryClient.invalidateQueries({ queryKey: ["dms-sent", user.id] });
+      } else if (msg.to_user_id === user.id) {
+        queryClient.invalidateQueries({ queryKey: ["dms-received", user.id] });
+      }
+    });
+    return () => unsub();
+  }, [user?.id, queryClient]);
 
   // Build conversation list: one entry per unique peer
   const conversations = useMemo(() => {

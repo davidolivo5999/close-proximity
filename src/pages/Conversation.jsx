@@ -26,15 +26,29 @@ export default function Conversation() {
     queryKey: ["conv-sent", user?.id, peerId],
     queryFn: () => base44.entities.DirectMessage.filter({ from_user_id: user.id, to_user_id: peerId }),
     enabled: !!user?.id,
-    refetchInterval: 5000,
   });
 
   const { data: received = [] } = useQuery({
     queryKey: ["conv-received", user?.id, peerId],
     queryFn: () => base44.entities.DirectMessage.filter({ from_user_id: peerId, to_user_id: user.id }),
     enabled: !!user?.id,
-    refetchInterval: 5000,
   });
+
+  // Real-time updates instead of polling
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsub = base44.entities.DirectMessage.subscribe((event) => {
+      const msg = event.data;
+      if (!msg) return;
+      if (msg.from_user_id === user.id && msg.to_user_id === peerId) {
+        queryClient.invalidateQueries({ queryKey: ["conv-sent", user.id, peerId] });
+      } else if (msg.from_user_id === peerId && msg.to_user_id === user.id) {
+        queryClient.invalidateQueries({ queryKey: ["conv-received", user.id, peerId] });
+        queryClient.invalidateQueries({ queryKey: ["dms-received", user.id] });
+      }
+    });
+    return () => unsub();
+  }, [user?.id, peerId, queryClient]);
 
   // Mark received as read
   useEffect(() => {
