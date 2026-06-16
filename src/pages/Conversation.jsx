@@ -15,13 +15,28 @@ export default function Conversation() {
   const bottomRef = useRef(null);
   const [text, setText] = useState("");
 
-  const peerName = routerLocation.state?.peerName || "User";
+  const peerNameFromState = routerLocation.state?.peerName;
   const peerAvatarUrl = routerLocation.state?.peerAvatarUrl || null;
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
   });
+
+  // Fetch peer location if name not in state
+  const { data: peerLocation } = useQuery({
+    queryKey: ["peerProfile", peerId],
+    queryFn: async () => {
+      const results = await base44.entities.UserLocation.filter({ user_id: peerId });
+      return results[0] || null;
+    },
+    enabled: !!peerId && !peerNameFromState,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+  });
+
+  const peerName = peerNameFromState || peerLocation?.user_name || "User";
 
   const { data: sent = [] } = useQuery({
     queryKey: ["conv-sent", user?.id, peerId],
