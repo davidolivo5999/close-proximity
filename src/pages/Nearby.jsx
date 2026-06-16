@@ -168,40 +168,37 @@ export default function Nearby() {
     return req?.status || null;
   };
 
-  const nearbyUsers = location
-    ? allLocations
-        .filter((u) => u.user_id !== user?.id)
-        .filter((u) => !myBlocks.includes(u.user_id))
-        .filter((u, idx, arr) => arr.findIndex(x => x.user_id === u.user_id) === idx)
-        .map((u) => ({
-          ...u,
-          distance: calculateDistance(
-            location.latitude, location.longitude,
-            u.latitude, u.longitude
-          ),
-        }))
-        .filter((u) => u.distance <= RADIUS_KM)
-        .filter((u) => !activeInterest || (u.interests || []).includes(activeInterest))
-        .sort((a, b) =>
-          sortBy === "name"
-            ? (a.user_name || "").localeCompare(b.user_name || "")
-            : a.distance - b.distance
-        )
-    : [];
+  const nearbyUsers = allLocations
+    .filter((u) => u.user_id !== user?.id)
+    .filter((u) => !myBlocks.includes(u.user_id))
+    .filter((u, idx, arr) => arr.findIndex(x => x.user_id === u.user_id) === idx)
+    .map((u) => ({
+      ...u,
+      distance: location ? calculateDistance(
+        location.latitude, location.longitude,
+        u.latitude, u.longitude
+      ) : null,
+    }))
+    .filter((u) => !location || u.distance <= RADIUS_KM)
+    .filter((u) => !activeInterest || (u.interests || []).includes(activeInterest))
+    .sort((a, b) => {
+      if (!location) return (a.user_name || "").localeCompare(b.user_name || "");
+      return sortBy === "name"
+        ? (a.user_name || "").localeCompare(b.user_name || "")
+        : a.distance - b.distance;
+    });
 
-  const nearbyHangouts = location
-    ? allHangouts
-        .filter((h) => new Date(h.expires_at) > new Date())
-        .map((h) => ({
-          ...h,
-          distance: calculateDistance(
-            location.latitude, location.longitude,
-            h.latitude, h.longitude
-          ),
-        }))
-        .filter((h) => h.distance <= RADIUS_KM)
-        .sort((a, b) => new Date(a.expires_at) - new Date(b.expires_at))
-    : [];
+  const nearbyHangouts = allHangouts
+    .filter((h) => new Date(h.expires_at) > new Date())
+    .map((h) => ({
+      ...h,
+      distance: location ? calculateDistance(
+        location.latitude, location.longitude,
+        h.latitude, h.longitude
+      ) : null,
+    }))
+    .filter((h) => !location || h.distance <= RADIUS_KM)
+    .sort((a, b) => new Date(a.expires_at) - new Date(b.expires_at));
 
   const sendRequest = useMutation({
     mutationFn: async (targetUser) => {
@@ -363,25 +360,9 @@ export default function Nearby() {
             </div>
           )}
 
-          {/* No location */}
-          {!location && !isScanning && !insideZone && (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                <MapPinOff className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h2 className="text-lg font-semibold mb-2">Location Required</h2>
-              <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                {locError || "Enable location access to discover people around you"}
-              </p>
-              <Button onClick={handleScan} className="rounded-full px-8">
-                <Radar className="h-4 w-4 mr-2" /> Enable &amp; Scan
-              </Button>
-            </div>
-          )}
-
           {isScanning && <PulseRadar isScanning={true} />}
 
-          {location && !isScanning && (
+          {!isScanning && (
             <div className="mt-4 space-y-6">
 
               {/* Trending section */}
