@@ -11,6 +11,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { isAdmin } from "@/lib/roleCheck";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
@@ -91,6 +92,7 @@ export default function Profile() {
   }, [myLocation, user]);
 
   const handleSave = async () => {
+    if (!isAdmin(user)) { toast.error("Only the app admin can modify the profile"); return; }
     if (!myLocation) { toast.error("Please enable location first on the Discover tab"); return; }
     setSaving(true);
     await base44.entities.UserLocation.update(myLocation.id, {

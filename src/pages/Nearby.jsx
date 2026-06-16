@@ -17,6 +17,8 @@ import { useFriendProximityAlerts } from "@/hooks/useFriendProximityAlerts";
 import HangoutsMap from "@/components/hangouts/HangoutsMap";
 import TrendingHangouts from "@/components/hangouts/TrendingHangouts";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import { isAdmin } from "@/lib/roleCheck";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const RADIUS_KM = 50;
 
@@ -204,22 +206,28 @@ export default function Nearby() {
     : [];
 
   const sendRequest = useMutation({
-    mutationFn: async (targetUser) =>
-      base44.entities.FriendRequest.create({
+    mutationFn: async (targetUser) => {
+      if (!isAdmin(user)) throw new Error("Only the app admin can send requests");
+      return base44.entities.FriendRequest.create({
         from_user_id: user.id,
         to_user_id: targetUser.user_id,
         from_user_name: user.full_name,
         to_user_name: targetUser.user_name,
         status: "pending",
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success("Friend request sent!");
       queryClient.invalidateQueries({ queryKey: ["myRequests"] });
+    },
+    onError: () => {
+      toast.error("Only the app admin can send requests");
     },
   });
 
   const createHangout = useMutation({
     mutationFn: async ({ title, description, emoji, duration_hours }) => {
+      if (!isAdmin(user)) throw new Error("Only the app admin can create hangouts");
       const expiresAt = new Date(Date.now() + duration_hours * 3600 * 1000).toISOString();
       return base44.entities.Hangout.create({
         host_id: user.id,
@@ -240,6 +248,9 @@ export default function Nearby() {
       toast.success("Hangout created! Friends nearby can see it.");
       setShowCreateHangout(false);
       queryClient.invalidateQueries({ queryKey: ["hangouts"] });
+    },
+    onError: () => {
+      toast.error("Only the app admin can create hangouts");
     },
   });
 
@@ -313,7 +324,7 @@ export default function Nearby() {
           <p className="text-sm text-muted-foreground">People &amp; hangouts nearby</p>
         </div>
         <div className="flex items-center gap-2">
-          {location && (
+          {location && isAdmin(user) && (
             <Button
               size="sm"
               className="rounded-full gap-1.5 px-4 shadow-md shadow-primary/20"
@@ -321,6 +332,7 @@ export default function Nearby() {
             >
               <Plus className="h-3.5 w-3.5" /> Hangout
             </Button>
+          )}
           )}
           <Button
             variant="outline"
