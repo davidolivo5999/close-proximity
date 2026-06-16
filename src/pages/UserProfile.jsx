@@ -108,6 +108,7 @@ export default function UserProfile() {
           name={userName}
           size="xl"
           colorIndex={userId?.charCodeAt(0) || 0}
+          avatarUrl={locationData?.avatar_url}
         />
         <h1 className="text-2xl font-heading font-bold mt-3">{userName}</h1>
         {distance != null && (

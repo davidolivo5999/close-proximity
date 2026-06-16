@@ -9,7 +9,7 @@ const COLORS = [
   "bg-gradient-to-br from-pink-400 to-fuchsia-600",
 ];
 
-export default function UserAvatar({ name, size = "md", colorIndex = 0 }) {
+export default function UserAvatar({ name, size = "md", colorIndex = 0, avatarUrl = null }) {
   const sizes = {
     sm: "h-8 w-8 text-xs",
     md: "h-12 w-12 text-base",
@@ -26,9 +26,17 @@ export default function UserAvatar({ name, size = "md", colorIndex = 0 }) {
 
   const color = COLORS[Math.abs(colorIndex) % COLORS.length];
 
+  if (avatarUrl) {
+    return (
+      <div className={`${sizes[size]} rounded-full overflow-hidden shadow-lg ring-2 ring-white/20 flex-shrink-0`}>
+        <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`${sizes[size]} ${color} rounded-full flex items-center justify-center text-white font-semibold shadow-lg ring-2 ring-white/20`}
+      className={`${sizes[size]} ${color} rounded-full flex items-center justify-center text-white font-semibold shadow-lg ring-2 ring-white/20 flex-shrink-0`}
     >
       {initials}
     </div>

@@ -24,6 +24,10 @@
       "type": "string",
       "description": "Color for avatar placeholder"
     },
+    "avatar_url": {
+      "type": "string",
+      "description": "Profile picture URL"
+    },
     "is_visible": {
       "type": "boolean",
       "default": true,

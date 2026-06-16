@@ -54,6 +54,7 @@ export default function NearbyUserCard({ user, distance, onSendRequest, requestS
           name={user.user_name}
           size="md"
           colorIndex={user.user_id?.charCodeAt(0) || 0}
+          avatarUrl={user.avatar_url}
         />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">

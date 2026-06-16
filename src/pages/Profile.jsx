@@ -26,6 +26,8 @@ export default function Profile() {
   const [photos, setPhotos] = useState([]);
   const [privacyZones, setPrivacyZones] = useState([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [profileTheme, setProfileTheme] = useState("default");
   const [saving, setSaving] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
@@ -63,6 +65,7 @@ export default function Profile() {
       setPhotos(myLocation.photos || []);
       setPrivacyZones(myLocation.privacy_zones || []);
       setProfileTheme(myLocation.profile_theme || "default");
+      setAvatarUrl(myLocation.avatar_url || "");
     }
   }, [myLocation]);
 
@@ -71,7 +74,7 @@ export default function Profile() {
     setSaving(true);
     await base44.entities.UserLocation.update(myLocation.id, {
       bio, is_visible: isVisible, interests, photos, privacy_zones: privacyZones,
-      profile_theme: profileTheme,
+      profile_theme: profileTheme, avatar_url: avatarUrl,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
     toast.success("Profile updated!");
@@ -86,6 +89,20 @@ export default function Profile() {
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setPhotos((prev) => [...prev, file_url]);
     setUploadingPhoto(false);
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setAvatarUrl(file_url);
+    if (myLocation) {
+      await base44.entities.UserLocation.update(myLocation.id, { avatar_url: file_url });
+      queryClient.invalidateQueries({ queryKey: ["myLocation"] });
+      toast.success("Profile picture updated!");
+    }
+    setUploadingAvatar(false);
   };
 
   const handleRemovePhoto = (url) => setPhotos((prev) => prev.filter((p) => p !== url));
@@ -114,7 +131,20 @@ export default function Profile() {
       <div className={`relative bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === profileTheme)?.gradient || "from-primary/20 to-accent/20"} pt-10 pb-6 px-5`}>
         <div className="flex flex-col items-center">
           <div className="relative">
-            <UserAvatar name={user?.full_name} size="xl" colorIndex={user?.id?.charCodeAt(0) || 0} />
+            <UserAvatar
+              name={user?.full_name}
+              size="xl"
+              colorIndex={user?.id?.charCodeAt(0) || 0}
+              avatarUrl={avatarUrl}
+            />
+            <label className="absolute inset-0 rounded-full cursor-pointer flex items-end justify-center pb-1 bg-black/0 hover:bg-black/30 transition-colors group">
+              {uploadingAvatar ? (
+                <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin mb-1" />
+              ) : (
+                <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity mb-1" />
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
+            </label>
             <div className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background ${isVisible ? "bg-emerald-500" : "bg-muted-foreground"}`} />
           </div>
           <h1 className="text-2xl font-heading font-bold mt-3 text-foreground">{user?.full_name}</h1>
