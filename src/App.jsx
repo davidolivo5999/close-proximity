@@ -78,10 +78,9 @@ const AuthenticatedApp = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/" element={<Landing />} />
 
         <Route element={<AppLayout />}>
-          <Route path="/nearby" element={<PageWrapper><Nearby /></PageWrapper>} />
+          <Route path="/" element={<PageWrapper><Nearby /></PageWrapper>} />
           <Route path="/friends" element={<PageWrapper><Friends /></PageWrapper>} />
           <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
           <Route path="/requests" element={<PageWrapper><Requests /></PageWrapper>} />
