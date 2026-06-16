@@ -74,8 +74,7 @@ export default function Nearby() {
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user; }, [user]);
 
-  // Broadcast own location — deps are ONLY the coords + insideZone so we
-  // never re-fire just because the query returned a new object reference.
+  // Broadcast own location — add debounce to avoid multiple updates
   useEffect(() => {
     const user = userRef.current;
     if (!user) return;
@@ -88,7 +87,7 @@ export default function Nearby() {
       return;
     }
 
-    const broadcast = async () => {
+    const timeout = setTimeout(async () => {
       const rec = myLocationRecordRef.current;
       const data = {
         user_id: user.id,
@@ -108,8 +107,9 @@ export default function Nearby() {
         await base44.entities.UserLocation.create(data);
         queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
       }
-    };
-    broadcast();
+    }, 500);
+
+    return () => clearTimeout(timeout);
   // Only re-broadcast when coords or zone actually change — NOT on object refetch
   }, [location?.latitude, location?.longitude, insideZone]);
 
@@ -117,7 +117,7 @@ export default function Nearby() {
     queryKey: ["nearbyUsers"],
     queryFn: () => base44.entities.UserLocation.filter({ is_visible: true }),
     enabled: !!location,
-    staleTime: 30 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
@@ -126,7 +126,7 @@ export default function Nearby() {
     queryKey: ["hangouts"],
     queryFn: () => base44.entities.Hangout.filter({ is_active: true }),
     enabled: !!location,
-    staleTime: 30 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
@@ -141,7 +141,8 @@ export default function Nearby() {
       return [...blocked.map((b) => b.blocked_id), ...blockedBy.map((b) => b.blocker_id)];
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: myRequests = [] } = useQuery({
@@ -154,7 +155,8 @@ export default function Nearby() {
       return [...sent, ...received];
     },
     enabled: !!user?.id,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const getRequestStatus = (otherUserId) => {
