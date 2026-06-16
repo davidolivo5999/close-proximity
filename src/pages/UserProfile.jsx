@@ -88,7 +88,7 @@ export default function UserProfile() {
     navigate(backTo, { replace: true, state: { __tab: backTab } });
   };
 
-  const userName = locationData?.user_name || location.state?.userName || "User";
+  const userName = locationData?.user_name || location.state?.userName || "VibeCheck User";
   const theme = PROFILE_THEMES.find(t => t.id === locationData?.profile_theme) || PROFILE_THEMES[0];
 
   return (

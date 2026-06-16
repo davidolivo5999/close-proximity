@@ -58,7 +58,7 @@ export default function NearbyUserCard({ user, distance, onSendRequest, requestS
         />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">
-            {user.user_name || "Anonymous"}
+            {user.user_name || "VibeCheck User"}
           </h3>
           {user.bio && (
             <p className="text-sm text-muted-foreground truncate mt-0.5">{user.bio}</p>
