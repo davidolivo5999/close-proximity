@@ -11,7 +11,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { isAdmin } from "@/lib/roleCheck";
+import { isAdmin, isAuthenticated } from "@/lib/roleCheck";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
@@ -171,6 +171,11 @@ export default function Profile() {
 
   return (
     <div style={{ marginBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
+      {!isAuthenticated(user) && (
+        <div className="bg-primary/10 border-b border-primary/20 px-5 py-2.5 text-center text-sm text-primary font-medium">
+          👀 Preview Mode — Sign in to customize your profile
+        </div>
+      )}
       {/* Hero */}
       <div className={`relative bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === profileTheme)?.gradient || "from-primary/20 to-accent/20"} pt-10 pb-6 px-5`}>
         <div className="flex flex-col items-center">

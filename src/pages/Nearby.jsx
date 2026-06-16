@@ -333,7 +333,6 @@ export default function Nearby() {
               <Plus className="h-3.5 w-3.5" /> Hangout
             </Button>
           )}
-          )}
           <Button
             variant="outline"
             size="icon"
