@@ -66,29 +66,30 @@ export default function Nearby() {
   const { location, error: locError, loading: locLoading, insideZone, requestLocation } =
     useUserLocation(privacyZones);
 
-  // Broadcast own location (only when NOT inside a privacy zone)
-  // Use a ref to avoid re-broadcasting unless coords change meaningfully (>10m)
-  const lastBroadcastCoords = useRef(null);
+  // Keep a ref to myLocationRecord so the broadcast effect can access it
+  // without it being a dependency (avoids re-firing on every refetch)
+  const myLocationRecordRef = useRef(myLocationRecord);
+  useEffect(() => { myLocationRecordRef.current = myLocationRecord; }, [myLocationRecord]);
+
+  const userRef = useRef(user);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  // Broadcast own location — deps are ONLY the coords + insideZone so we
+  // never re-fire just because the query returned a new object reference.
   useEffect(() => {
+    const user = userRef.current;
     if (!user) return;
+
     if (!location) {
-      if (insideZone && myLocationRecord) {
-        base44.entities.UserLocation.update(myLocationRecord.id, { is_visible: false });
+      const rec = myLocationRecordRef.current;
+      if (insideZone && rec) {
+        base44.entities.UserLocation.update(rec.id, { is_visible: false }).catch(() => {});
       }
       return;
     }
 
-    // Only broadcast if we've moved more than ~10m from last broadcast
-    const prev = lastBroadcastCoords.current;
-    if (prev) {
-      const latDiff = Math.abs(prev.latitude - location.latitude);
-      const lngDiff = Math.abs(prev.longitude - location.longitude);
-      // ~0.0001 degrees ≈ 11 meters
-      if (latDiff < 0.0001 && lngDiff < 0.0001) return;
-    }
-    lastBroadcastCoords.current = { latitude: location.latitude, longitude: location.longitude };
-
     const broadcast = async () => {
+      const rec = myLocationRecordRef.current;
       const data = {
         user_id: user.id,
         user_name: user.full_name || "",
@@ -97,20 +98,20 @@ export default function Nearby() {
         is_visible: true,
       };
       try {
-        if (myLocationRecord) {
-          await base44.entities.UserLocation.update(myLocationRecord.id, data);
+        if (rec) {
+          await base44.entities.UserLocation.update(rec.id, data);
         } else {
           await base44.entities.UserLocation.create(data);
           queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
         }
       } catch {
-        // Record may have been deleted (duplicate cleanup); create a fresh one
         await base44.entities.UserLocation.create(data);
         queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
       }
     };
     broadcast();
-  }, [location, user, insideZone, myLocationRecord]);
+  // Only re-broadcast when coords or zone actually change — NOT on object refetch
+  }, [location?.latitude, location?.longitude, insideZone]);
 
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
     queryKey: ["nearbyUsers"],
