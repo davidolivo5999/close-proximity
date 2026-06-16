@@ -93,6 +93,8 @@ export default function Nearby() {
     queryFn: () => base44.entities.UserLocation.filter({ is_visible: true }),
     enabled: !!location,
     refetchInterval: 60000,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: allHangouts = [], refetch: refetchHangouts } = useQuery({
@@ -100,6 +102,8 @@ export default function Nearby() {
     queryFn: () => base44.entities.Hangout.filter({ is_active: true }),
     enabled: !!location,
     refetchInterval: 60000,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: myBlocks = [] } = useQuery({
@@ -110,6 +114,7 @@ export default function Nearby() {
       return [...blocked.map((b) => b.blocked_id), ...blockedBy.map((b) => b.blocker_id)];
     },
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: myRequests = [] } = useQuery({
@@ -120,6 +125,7 @@ export default function Nearby() {
       return [...sent, ...received];
     },
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
   });
 
   const getRequestStatus = (otherUserId) => {
