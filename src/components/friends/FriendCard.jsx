@@ -19,6 +19,7 @@ export default function FriendCard({ friend, index }) {
           name={friend.name}
           size="md"
           colorIndex={friend.id?.charCodeAt(0) || 0}
+          avatarUrl={friend.avatarUrl}
         />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground truncate">{friend.name}</h3>

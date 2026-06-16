@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Users, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import FriendCard from "@/components/friends/FriendCard";
+
 
 export default function Friends() {
   const [search, setSearch] = React.useState("");
@@ -38,6 +39,21 @@ export default function Friends() {
       since: r.updated_date,
     };
   });
+
+  const friendIds = friends.map((f) => f.id);
+  const { data: friendLocations = [] } = useQuery({
+    queryKey: ["friendLocations", friendIds.join(",")],
+    queryFn: () => Promise.all(
+      friendIds.map((id) => base44.entities.UserLocation.filter({ user_id: id }).then((r) => r[0] || null))
+    ),
+    enabled: friendIds.length > 0,
+    staleTime: 60000,
+  });
+  const avatarMap = useMemo(() => {
+    const map = {};
+    friendIds.forEach((id, i) => { if (friendLocations[i]?.avatar_url) map[id] = friendLocations[i].avatar_url; });
+    return map;
+  }, [friendLocations, friendIds]);
 
   const filtered = friends.filter((f) =>
     f.name?.toLowerCase().includes(search.toLowerCase())
@@ -82,7 +98,7 @@ export default function Friends() {
         ) : (
           <div className="space-y-3">
             {filtered.map((friend, i) => (
-              <FriendCard key={friend.id} friend={friend} index={i} />
+              <FriendCard key={friend.id} friend={{ ...friend, avatarUrl: avatarMap[friend.id] }} index={i} />
             ))}
             {filtered.length === 0 && search && (
               <p className="text-center text-sm text-muted-foreground py-8">
