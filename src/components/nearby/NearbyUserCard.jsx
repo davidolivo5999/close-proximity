@@ -34,7 +34,14 @@ export default function NearbyUserCard({ user, distance, onSendRequest, requestS
       <Button
         size="sm"
         className="rounded-full bg-primary hover:bg-primary/90 shadow-md shadow-primary/20"
-        onClick={(e) => { e.stopPropagation(); onSendRequest(user); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!currentUserId) {
+            navigate("/register");
+          } else {
+            onSendRequest(user);
+          }
+        }}
       >
         <UserPlus className="h-3.5 w-3.5 mr-1" /> Add
       </Button>
