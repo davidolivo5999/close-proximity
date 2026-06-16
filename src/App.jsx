@@ -13,6 +13,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
+import Landing from "@/pages/Landing";
 
 import AppLayout from "@/components/shared/AppLayout";
 import Nearby from "@/pages/Nearby";
@@ -77,9 +78,10 @@ const AuthenticatedApp = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/" element={<Landing />} />
 
         <Route element={<AppLayout />}>
-          <Route path="/" element={<PageWrapper><Nearby /></PageWrapper>} />
+          <Route path="/nearby" element={<PageWrapper><Nearby /></PageWrapper>} />
           <Route path="/friends" element={<PageWrapper><Friends /></PageWrapper>} />
           <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
           <Route path="/requests" element={<PageWrapper><Requests /></PageWrapper>} />
