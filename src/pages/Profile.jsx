@@ -85,13 +85,9 @@ export default function Profile() {
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !myLocation) return;
-    const localUrl = URL.createObjectURL(file);
-    const newPhotos = [...photos, localUrl];
-    setPhotos(newPhotos);
     setUploadingPhoto(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    URL.revokeObjectURL(localUrl);
-    const saved = newPhotos.map((p) => (p === localUrl ? file_url : p));
+    const saved = [...photos, file_url];
     setPhotos(saved);
     await base44.entities.UserLocation.update(myLocation.id, { photos: saved });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
