@@ -18,7 +18,7 @@ import PastHangouts from "@/components/profile/PastHangouts";
 import PrivacyZones from "@/components/profile/PrivacyZones";
 import ExportReport from "@/components/profile/ExportReport";
 import BlockedUsers from "@/components/profile/BlockedUsers";
-import ProfileThemePicker, { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
+import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -349,18 +349,6 @@ export default function Profile() {
                   {bio || "No bio yet. Tap Edit to add one."}
                 </p>
               )}
-            </div>
-
-            {/* Theme picker card */}
-            <div className="bg-card rounded-2xl border border-border p-4">
-              <ProfileThemePicker value={profileTheme} onChange={setProfileTheme} />
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="mt-3 text-xs text-primary font-medium"
-              >
-                {saving ? "Saving..." : "Save theme"}
-              </button>
             </div>
 
             {/* Interests card */}
