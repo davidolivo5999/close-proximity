@@ -89,12 +89,9 @@ export default function Conversation() {
     return () => unsub();
   }, [user?.id, peerId, queryClient]);
 
-  // Mark received as read
-  useEffect(() => {
-    if (!user) return;
-    const unread = received.filter((m) => !m.read);
-    unread.forEach((m) => base44.entities.DirectMessage.update(m.id, { read: true }));
-  }, [received, user]);
+  // Mark received as read — only the sender can update their own messages per RLS
+  // so we skip this silently; read receipts are shown based on the sender's own data
+  
 
   const messages = [...sent, ...received].sort(
     (a, b) => new Date(a.created_date) - new Date(b.created_date)
