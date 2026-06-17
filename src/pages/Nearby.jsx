@@ -350,6 +350,23 @@ export default function Nearby() {
 
       <PullToRefresh onRefresh={async () => { await Promise.all([refetchLocations(), refetchHangouts()]); }}>
         <div className="px-5 pt-3">
+          {/* Location permission banner */}
+          {locError && !isScanning && (
+            <div className="flex items-center justify-between gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-4">
+              <div className="flex items-center gap-2">
+                <MapPinOff className="h-4 w-4 text-primary shrink-0" />
+                <p className="text-sm text-primary font-medium">Location access needed</p>
+              </div>
+              <Button
+                size="sm"
+                className="rounded-full px-4 shrink-0"
+                onClick={requestLocation}
+              >
+                Enable
+              </Button>
+            </div>
+          )}
+
           {/* Privacy zone banner */}
           {insideZone && !isScanning && (
             <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-4">

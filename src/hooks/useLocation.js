@@ -36,16 +36,16 @@ export function useUserLocation(privacyZones = []) {
     setLoading(false);
   }, []);
 
-  const requestLocation = useCallback(() => {
+  const startWatch = useCallback(() => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
       return;
     }
-    // If already watching, do nothing
     if (watchIdRef.current !== null) return;
 
     setLoading(true);
     setError(null);
+    localStorage.setItem("locationPermissionGranted", "1");
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       handlePosition,
@@ -54,9 +54,14 @@ export function useUserLocation(privacyZones = []) {
     );
   }, [handlePosition, handleError]);
 
-  // Start watching on mount, clean up on unmount
+  const requestLocation = useCallback(() => {
+    startWatch();
+  }, [startWatch]);
+
+  // Start watching on mount if previously granted, clean up on unmount
   useEffect(() => {
-    requestLocation();
+    // Always try — browser will use cached permission on repeat visits (no second prompt)
+    startWatch();
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
