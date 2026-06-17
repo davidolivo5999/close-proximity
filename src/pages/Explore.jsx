@@ -2,11 +2,12 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Clock, Repeat2, Globe, Heart, Video } from "lucide-react";
+import { Compass, Clock, Repeat2, Globe, Heart, Video, Images } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
+import PhotoFeedCard from "@/components/explore/PhotoFeedCard";
 
 function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClick, photos, videos, likeCounts }) {
   // Sort photos by like count desc, then show up to 3
@@ -74,7 +75,7 @@ function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClic
 
 export default function Explore() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("encountered");
+  const [tab, setTab] = useState("feed");
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -131,6 +132,19 @@ export default function Explore() {
     [allLocations, encounteredIds, user?.id]
   );
 
+  // Build photo feed: all photos from all visible users, each as its own card
+  const photoFeed = useMemo(() => {
+    const items = [];
+    for (const loc of allLocations) {
+      if (loc.user_id === user?.id) continue;
+      for (const photo of (loc.photos || [])) {
+        items.push({ photo, owner: loc });
+      }
+    }
+    // Shuffle by mixing owner order so it feels like a feed
+    return items.sort((a, b) => new Date(b.owner.updated_date) - new Date(a.owner.updated_date));
+  }, [allLocations, user?.id]);
+
   const isLoading = loadingEncounters || loadingAll;
 
   return (
@@ -142,27 +156,61 @@ export default function Explore() {
         {/* Tabs */}
         <div className="flex gap-1 mt-3 bg-muted rounded-xl p-1">
           <button
+            onClick={() => setTab("feed")}
+            className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 ${tab === "feed" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+          >
+            <Images className="h-3.5 w-3.5" /> Feed
+          </button>
+          <button
             onClick={() => setTab("encountered")}
             className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors ${tab === "encountered" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
           >
-            Crossed Paths {sortedEncounters.length > 0 && `(${sortedEncounters.length})`}
+            Paths {sortedEncounters.length > 0 && `(${sortedEncounters.length})`}
           </button>
           <button
             onClick={() => setTab("discover")}
             className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors ${tab === "discover" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
           >
-            Discover {undiscovered.length > 0 && `(${undiscovered.length})`}
+            Discover
           </button>
         </div>
       </div>
 
-      <div className="px-5 pt-4 pb-6">
+      <div className={tab === "feed" ? "" : "px-5 pt-4 pb-6"}>
         {isLoading && (
-          <div className="space-y-3 mt-2">
+          <div className="space-y-3 mt-2 px-5 pt-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-20 bg-muted rounded-2xl animate-pulse" />
             ))}
           </div>
+        )}
+
+        {/* PHOTO FEED TAB */}
+        {!isLoading && tab === "feed" && (
+          <>
+            {photoFeed.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center px-5">
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <Images className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-lg font-semibold mb-2">No photos yet</h2>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  Photos from people nearby will show up here.
+                </p>
+              </div>
+            ) : (
+              <div>
+                {photoFeed.map(({ photo, owner }, i) => (
+                  <PhotoFeedCard
+                    key={`${owner.user_id}-${i}`}
+                    photo={photo}
+                    owner={owner}
+                    currentUser={user}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {!isLoading && tab === "encountered" && (
