@@ -17,7 +17,7 @@ import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
 import PrivacyZones from "@/components/profile/PrivacyZones";
 import ExportReport from "@/components/profile/ExportReport";
-import BlockedUsers from "@/components/profile/BlockedUsers.jsx";
+import BlockedUsers from "@/components/profile/BlockedUsers";
 import ProfileThemePicker, { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 
 export default function Profile() {
