@@ -90,6 +90,14 @@ export default function Messages() {
     return map;
   }, [allLocations, peerIds]);
 
+  const peerNameMap = useMemo(() => {
+    const map = {};
+    for (const loc of allLocations) {
+      if (peerIds.includes(loc.user_id) && loc.user_name) map[loc.user_id] = loc.user_name;
+    }
+    return map;
+  }, [allLocations, peerIds]);
+
   return (
     <div>
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 safe-area-top">
@@ -113,13 +121,13 @@ export default function Messages() {
             {conversations.map((conv, i) => (
               <button
                 key={conv.peerId}
-                onClick={() => navigate(`/messages/${conv.peerId}`, { state: { peerName: conv.peerName, peerAvatarUrl: peerAvatarMap[conv.peerId] } })}
+                onClick={() => navigate(`/messages/${conv.peerId}`, { state: { peerName: peerNameMap[conv.peerId] || conv.peerName, peerAvatarUrl: peerAvatarMap[conv.peerId] } })}
                 className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/60 transition-colors text-left"
               >
-                <UserAvatar name={conv.peerName} size="md" colorIndex={i} avatarUrl={peerAvatarMap[conv.peerId]} />
+                <UserAvatar name={peerNameMap[conv.peerId] || conv.peerName} size="md" colorIndex={i} avatarUrl={peerAvatarMap[conv.peerId]} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm text-foreground truncate">{conv.peerName}</span>
+                    <span className="font-semibold text-sm text-foreground truncate">{peerNameMap[conv.peerId] || conv.peerName}</span>
                   </div>
                   <p className="text-sm text-muted-foreground truncate">{conv.lastText}</p>
                 </div>
