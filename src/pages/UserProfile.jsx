@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, ArrowLeft, ShieldOff, X, MessageCircle, Heart } from "lucide-react";
+import { MapPin, ArrowLeft, ShieldOff, MessageCircle } from "lucide-react";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 import UserAvatar from "@/components/shared/UserAvatar";
 import {
@@ -12,14 +12,13 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import MediaReactions from "@/components/profile/MediaReactions";
+import PhotoFeedCard from "@/components/explore/PhotoFeedCard";
 
 export default function UserProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
   const backTo = location.state?.from || "/";
   const backTab = location.state?.from || "/";
@@ -31,29 +30,7 @@ export default function UserProfile() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: myLikes = [] } = useQuery({
-    queryKey: ["photoLikes", currentUser?.id, userId],
-    queryFn: () => base44.entities.PhotoLike.filter({ photo_owner_id: userId }),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-  });
 
-  const likedUrls = new Set(myLikes.filter(l => l.user_id === currentUser?.id).map(l => l.photo_url));
-  const likeCounts = myLikes.reduce((acc, l) => { acc[l.photo_url] = (acc[l.photo_url] || 0) + 1; return acc; }, {});
-
-  const toggleLike = useMutation({
-    mutationFn: async (photoUrl) => {
-      const existing = myLikes.find(l => l.user_id === currentUser.id && l.photo_url === photoUrl);
-      if (existing) {
-        await base44.entities.PhotoLike.delete(existing.id);
-      } else {
-        await base44.entities.PhotoLike.create({ user_id: currentUser.id, photo_url: photoUrl, photo_owner_id: userId });
-      }
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["photoLikes", currentUser?.id, userId] }),
-  });
 
   const { data: locationData, isLoading } = useQuery({
     queryKey: ["userProfile", userId],
@@ -185,50 +162,42 @@ export default function UserProfile() {
               </div>
             )}
 
-            {/* Photos */}
+            {/* Photos — Instagram-style feed */}
             {locationData.photos?.length > 0 && (
               <div className="bg-card rounded-2xl border border-border overflow-hidden">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-1">
                   Photos · {locationData.photos.length}
                 </p>
-                <div className="grid grid-cols-3 gap-0.5">
-                  {locationData.photos.map((url, i) => (
-                    <button key={i} onClick={() => setLightboxPhoto(url)} className="relative aspect-square overflow-hidden">
-                      <img src={url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                    </button>
-                  ))}
-                </div>
-                {canInteract && (
-                  <div className="px-4 pt-3 pb-4 space-y-2.5">
-                    {locationData.photos.map((url, i) => (
-                      <div key={i} className="border-t border-border/50 pt-2.5 first:border-0 first:pt-0">
-                        <p className="text-xs text-muted-foreground mb-1.5">Photo {i + 1}</p>
-                        <MediaReactions mediaUrl={url} mediaOwnerId={userId} currentUser={currentUser} />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {locationData.photos.map((url, i) => (
+                  <PhotoFeedCard
+                    key={i}
+                    photo={url}
+                    owner={locationData}
+                    currentUser={canInteract ? currentUser : null}
+                  />
+                ))}
               </div>
             )}
 
-            {/* Videos */}
+            {/* Videos — feed style */}
             {locationData.videos?.length > 0 && (
               <div className="bg-card rounded-2xl border border-border overflow-hidden">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-1">
                   Videos · {locationData.videos.length}
                 </p>
-                <div className="space-y-0">
-                  {locationData.videos.map((url, i) => (
-                    <div key={i} className={`${i > 0 ? "border-t border-border/50" : ""}`}>
-                      <video src={url} controls className="w-full max-h-64 bg-black" />
-                      {canInteract && (
-                        <div className="px-4 py-3">
-                          <MediaReactions mediaUrl={url} mediaOwnerId={userId} currentUser={currentUser} />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                {locationData.videos.map((url, i) => (
+                  <div key={i} className={i > 0 ? "border-t border-border/50" : ""}>
+                    <video src={url} controls className="w-full max-h-72 bg-black" />
+                    {canInteract && (
+                      <PhotoFeedCard
+                        photo={url}
+                        owner={locationData}
+                        currentUser={currentUser}
+                        videoMode
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
@@ -247,33 +216,7 @@ export default function UserProfile() {
         )}
       </div>
 
-      {/* Photo Lightbox */}
-      {lightboxPhoto && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
-          onClick={() => setLightboxPhoto(null)}
-        >
-          <img src={lightboxPhoto} alt="" className="max-w-full max-h-full object-contain" />
-          <button
-            className="absolute top-5 right-5 h-10 w-10 rounded-full bg-white/10 backdrop-blur flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-            onClick={() => setLightboxPhoto(null)}
-          >
-            <X className="h-5 w-5" />
-          </button>
-          {canInteract && (
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleLike.mutate(lightboxPhoto); }}
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-6 py-3 transition-all hover:bg-white/25"
-            >
-              <Heart className={`h-5 w-5 transition-colors ${likedUrls.has(lightboxPhoto) ? "fill-rose-500 text-rose-500" : "text-white"}`} />
-              <span className="text-white font-semibold text-sm">
-                {likedUrls.has(lightboxPhoto) ? "Liked" : "Like"}
-                {likeCounts[lightboxPhoto] > 0 ? ` · ${likeCounts[lightboxPhoto]}` : ""}
-              </span>
-            </button>
-          )}
-        </div>
-      )}
+
     </div>
   );
 }
