@@ -19,6 +19,7 @@ import PrivacyZones from "@/components/profile/PrivacyZones";
 import ExportReport from "@/components/profile/ExportReport";
 import BlockedUsers from "@/components/profile/BlockedUsers";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
+import VideoEditor from "@/components/profile/VideoEditor";
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -31,6 +32,7 @@ export default function Profile() {
   const [privacyZones, setPrivacyZones] = useState([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [pendingVideoFile, setPendingVideoFile] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
@@ -186,11 +188,17 @@ export default function Profile() {
     await base44.entities.UserLocation.update(myLocation.id, { photos: updated });
     queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, photos: updated } : old);
   };
-  const handleVideoUpload = async (e) => {
+  const handleVideoUpload = (e) => {
     if (!isAuthenticated(user)) { toast.error("Sign in to upload videos"); return; }
     const file = e.target.files[0];
     if (!file || !myLocation) return;
     e.target.value = "";
+    // Always open the editor so user can trim / confirm
+    setPendingVideoFile(file);
+  };
+
+  const handleVideoConfirmed = async (file) => {
+    setPendingVideoFile(null);
     setUploadingVideo(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     const saved = [...videos, file_url];
@@ -230,6 +238,13 @@ export default function Profile() {
 
   return (
     <div style={{ marginBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
+      {pendingVideoFile && (
+        <VideoEditor
+          file={pendingVideoFile}
+          onConfirm={handleVideoConfirmed}
+          onCancel={() => setPendingVideoFile(null)}
+        />
+      )}
       {!isAuthenticated(user) && (
         <div className="bg-primary/10 border-b border-primary/20 px-5 py-2.5 text-center text-sm text-primary font-medium">
           👀 Preview Mode — Sign in to customize your profile
