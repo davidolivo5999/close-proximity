@@ -5,6 +5,8 @@ import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, ArrowLeft, ShieldOff, MessageCircle } from "lucide-react";
+import PhotoGridLightbox from "@/components/profile/PhotoGridLightbox";
+import PhotoFeedCard from "@/components/explore/PhotoFeedCard";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 import UserAvatar from "@/components/shared/UserAvatar";
 import {
@@ -12,13 +14,13 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import PhotoFeedCard from "@/components/explore/PhotoFeedCard";
 
 export default function UserProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const [lightboxPhoto, setLightboxPhoto] = useState(null);
 
   const backTo = location.state?.from || "/";
   const backTab = location.state?.from || "/";
@@ -162,24 +164,27 @@ export default function UserProfile() {
               </div>
             )}
 
-            {/* Photos — Instagram-style feed */}
+            {/* Photos — grid with tap to expand */}
             {locationData.photos?.length > 0 && (
               <div className="bg-card rounded-2xl border border-border overflow-hidden">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-1">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-3">
                   Photos · {locationData.photos.length}
                 </p>
-                {locationData.photos.map((url, i) => (
-                  <PhotoFeedCard
-                    key={i}
-                    photo={url}
-                    owner={locationData}
-                    currentUser={canInteract ? currentUser : null}
-                  />
-                ))}
+                <div className="grid grid-cols-3 gap-0.5 px-0.5 pb-0.5">
+                  {locationData.photos.map((url, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setLightboxPhoto(url)}
+                      className="relative aspect-square overflow-hidden bg-muted"
+                    >
+                      <img src={url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Videos — feed style */}
+            {/* Videos — inline player + reactions */}
             {locationData.videos?.length > 0 && (
               <div className="bg-card rounded-2xl border border-border overflow-hidden">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-1">
@@ -188,14 +193,11 @@ export default function UserProfile() {
                 {locationData.videos.map((url, i) => (
                   <div key={i} className={i > 0 ? "border-t border-border/50" : ""}>
                     <video src={url} controls className="w-full max-h-72 bg-black" />
-                    {canInteract && (
-                      <PhotoFeedCard
-                        photo={url}
-                        owner={locationData}
-                        currentUser={currentUser}
-                        videoMode
-                      />
-                    )}
+                    <PhotoFeedCard
+                      photo={url}
+                      owner={locationData}
+                      currentUser={canInteract ? currentUser : null}
+                    />
                   </div>
                 ))}
               </div>
@@ -217,6 +219,12 @@ export default function UserProfile() {
       </div>
 
 
+      <PhotoGridLightbox
+        photo={lightboxPhoto}
+        owner={locationData}
+        currentUser={canInteract ? currentUser : null}
+        onClose={() => setLightboxPhoto(null)}
+      />
     </div>
   );
 }
