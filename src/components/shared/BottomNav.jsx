@@ -1,14 +1,14 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Radar, Users, Bell, UserCircle, Search, Crown, MessageCircle } from "lucide-react";
+import { Radar, Users, Bell, UserCircle, MessageCircle, Compass } from "lucide-react";
 import { useTabHistory, TAB_ROOTS } from "@/lib/TabHistoryContext";
 import UserAvatar from "@/components/shared/UserAvatar";
 
 const NAV_ITEMS = [
   { path: "/", icon: Radar, label: "Nearby" },
   { path: "/friends", icon: Users, label: "Friends" },
+  { path: "/explore", icon: Compass, label: "Explore" },
   { path: "/messages", icon: MessageCircle, label: "Messages" },
-  { path: "/requests", icon: Bell, label: "Requests" },
   { path: "/profile", icon: UserCircle, label: "Profile" },
 ];
 

@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 const TabHistoryContext = createContext(null);
 
 // Tab roots — order matters for matching (most specific first if needed)
-export const TAB_ROOTS = ["/", "/friends", "/search", "/requests", "/messages", "/pro", "/profile"];
+export const TAB_ROOTS = ["/", "/friends", "/explore", "/search", "/requests", "/messages", "/pro", "/profile"];
 
 export function getTabRoot(pathname) {
   // Find which tab root this path belongs to
@@ -22,6 +22,7 @@ export function TabHistoryProvider({ children }) {
   const tabPaths = useRef({
     "/": "/",
     "/friends": "/friends",
+    "/explore": "/explore",
     "/search": "/search",
     "/requests": "/requests",
     "/messages": "/messages",

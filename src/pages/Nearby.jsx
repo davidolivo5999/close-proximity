@@ -294,6 +294,47 @@ export default function Nearby() {
 
   useHangoutNotifications({ user, location });
 
+  // Track encounters — record people seen nearby
+  const encounterCooldownRef = useRef({});
+  useEffect(() => {
+    if (!user?.id || !location || nearbyUsers.length === 0) return;
+    const COOLDOWN_MS = 10 * 60 * 1000; // 10 min cooldown per person
+    const now = Date.now();
+
+    nearbyUsers.forEach(async (nu) => {
+      const lastRecorded = encounterCooldownRef.current[nu.user_id];
+      if (lastRecorded && now - lastRecorded < COOLDOWN_MS) return;
+      encounterCooldownRef.current[nu.user_id] = now;
+
+      const existing = await base44.entities.Encounter.filter({
+        user_id: user.id,
+        encountered_user_id: nu.user_id,
+      });
+
+      if (existing.length > 0) {
+        base44.entities.Encounter.update(existing[0].id, {
+          last_seen_at: new Date().toISOString(),
+          times_seen: (existing[0].times_seen || 1) + 1,
+          encountered_user_name: nu.user_name,
+          encountered_avatar_url: nu.avatar_url || null,
+          encountered_bio: nu.bio || null,
+          encountered_interests: nu.interests || [],
+        }).catch(() => {});
+      } else {
+        base44.entities.Encounter.create({
+          user_id: user.id,
+          encountered_user_id: nu.user_id,
+          encountered_user_name: nu.user_name,
+          encountered_avatar_url: nu.avatar_url || null,
+          encountered_bio: nu.bio || null,
+          encountered_interests: nu.interests || [],
+          last_seen_at: new Date().toISOString(),
+          times_seen: 1,
+        }).catch(() => {});
+      }
+    });
+  }, [nearbyUsers.length, location?.latitude, location?.longitude]);
+
   // Derive accepted friend IDs for proximity alerts
   const friendIds = myRequests
     .filter((r) => r.status === "accepted")

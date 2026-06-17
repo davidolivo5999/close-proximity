@@ -1,0 +1,57 @@
+{
+  "name": "Encounter",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The current user who encountered someone"
+    },
+    "encountered_user_id": {
+      "type": "string",
+      "description": "The user that was encountered"
+    },
+    "encountered_user_name": {
+      "type": "string"
+    },
+    "encountered_avatar_url": {
+      "type": "string"
+    },
+    "encountered_bio": {
+      "type": "string"
+    },
+    "encountered_interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_seen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time they were seen nearby"
+    },
+    "times_seen": {
+      "type": "number",
+      "default": 1,
+      "description": "How many times this person has been nearby"
+    }
+  },
+  "required": [
+    "user_id",
+    "encountered_user_id"
+  ],
+  "rls": {
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "read": {
+      "data.user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}
