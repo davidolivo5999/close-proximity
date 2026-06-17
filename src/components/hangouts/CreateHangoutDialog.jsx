@@ -33,7 +33,7 @@ export default function CreateHangoutDialog({ open, onClose, onSubmit, isLoading
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="rounded-2xl max-w-sm mx-4 p-0 overflow-hidden">
+      <DialogContent className="rounded-2xl max-w-sm w-[calc(100%-2rem)] left-1/2 -translate-x-1/2 p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle className="font-heading text-xl">Create a Hangout</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
