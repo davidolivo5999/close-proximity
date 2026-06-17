@@ -28,6 +28,10 @@
       "type": "string",
       "description": "Profile picture URL"
     },
+    "banner_url": {
+      "type": "string",
+      "description": "Profile banner image URL"
+    },
     "is_visible": {
       "type": "boolean",
       "default": true,

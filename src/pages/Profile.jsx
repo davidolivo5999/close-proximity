@@ -31,6 +31,8 @@ export default function Profile() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [profileTheme, setProfileTheme] = useState("default");
   const [saving, setSaving] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
@@ -89,6 +91,7 @@ export default function Profile() {
       setPrivacyZones(myLocation.privacy_zones || []);
       setProfileTheme(myLocation.profile_theme || "default");
       setAvatarUrl(myLocation.avatar_url || "");
+      setBannerUrl(myLocation.banner_url || "");
     }
   }, [myLocation, user]);
 
@@ -98,7 +101,7 @@ export default function Profile() {
     setSaving(true);
     await base44.entities.UserLocation.update(myLocation.id, {
       bio, is_visible: isVisible, interests, photos, privacy_zones: privacyZones,
-      profile_theme: profileTheme, avatar_url: avatarUrl,
+      profile_theme: profileTheme, avatar_url: avatarUrl, banner_url: bannerUrl,
       user_name: displayName || user?.full_name,
     });
     queryClient.invalidateQueries({ queryKey: ["myLocation"] });
@@ -146,6 +149,33 @@ export default function Profile() {
     setUploadingAvatar(false);
   };
 
+  const handleBannerUpload = async (e) => {
+    if (!isAuthenticated(user)) { toast.error("Sign in to upload a banner"); return; }
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = "";
+    const localUrl = URL.createObjectURL(file);
+    setBannerUrl(localUrl);
+    setUploadingBanner(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    URL.revokeObjectURL(localUrl);
+    setBannerUrl(file_url);
+    if (myLocation) {
+      await base44.entities.UserLocation.update(myLocation.id, { banner_url: file_url });
+      queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, banner_url: file_url } : old);
+      toast.success("Banner updated!");
+    }
+    setUploadingBanner(false);
+  };
+
+  const handleRemoveBanner = async () => {
+    if (!myLocation) return;
+    setBannerUrl("");
+    await base44.entities.UserLocation.update(myLocation.id, { banner_url: "" });
+    queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, banner_url: "" } : old);
+    toast.success("Banner removed");
+  };
+
   const handleRemovePhoto = async (url) => {
     if (!myLocation) return;
     const updated = photos.filter((p) => p !== url);
@@ -180,8 +210,32 @@ export default function Profile() {
         </div>
       )}
       {/* Hero */}
-      <div className={`relative bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === profileTheme)?.gradient || "from-primary/20 to-accent/20"} pt-10 pb-6 px-5`}>
-        <div className="flex flex-col items-center">
+      <div className="relative">
+        {/* Banner */}
+        <div className={`relative h-36 ${bannerUrl ? "" : `bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === profileTheme)?.gradient || "from-primary/20 to-accent/20"}`}`}>
+          {bannerUrl && <img src={bannerUrl} alt="Profile banner" className="w-full h-full object-cover" />}
+          <div className="absolute bottom-2 right-2 flex gap-1.5">
+            <label className="flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full px-2.5 py-1 cursor-pointer hover:bg-black/70 transition-colors">
+              {uploadingBanner ? (
+                <div className="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Camera className="h-3 w-3" />
+              )}
+              {bannerUrl ? "Change" : "Add banner"}
+              <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={uploadingBanner} />
+            </label>
+            {bannerUrl && (
+              <button
+                onClick={handleRemoveBanner}
+                className="flex items-center bg-black/50 backdrop-blur-sm text-white rounded-full px-2 py-1 hover:bg-black/70 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center pb-6 px-5" style={{ marginTop: "-2.5rem" }}>
           <div className="relative">
             <UserAvatar
               name={user?.full_name}
