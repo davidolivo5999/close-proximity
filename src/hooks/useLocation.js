@@ -31,7 +31,8 @@ export function useUserLocation(privacyZones = []) {
     setError(null);
   }, []);
 
-  const handleError = useCallback(() => {
+  const handleError = useCallback((err) => {
+    console.error("Geolocation error:", err?.code, err?.message);
     setError("Please enable location access to discover nearby people");
     setLoading(false);
   }, []);
@@ -41,16 +42,20 @@ export function useUserLocation(privacyZones = []) {
       setError("Geolocation is not supported by your browser");
       return;
     }
-    if (watchIdRef.current !== null) return;
+
+    // Clear any existing watch before starting a new one
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
 
     setLoading(true);
     setError(null);
-    localStorage.setItem("locationPermissionGranted", "1");
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       handlePosition,
       handleError,
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }, [handlePosition, handleError]);
 
