@@ -4,48 +4,65 @@ export function useUserLocation(privacyZones = []) {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [insideZone, setInsideZone] = useState(null); // zone name if blocked
+  const [insideZone, setInsideZone] = useState(null);
 
-  // Keep zones in a ref so requestLocation is stable and never recreated
   const privacyZonesRef = useRef(privacyZones);
   useEffect(() => { privacyZonesRef.current = privacyZones; }, [privacyZones]);
+
+  const watchIdRef = useRef(null);
+
+  const handlePosition = useCallback((position) => {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    const blocked = privacyZonesRef.current.find((zone) => {
+      const distM = calculateDistance(lat, lon, zone.latitude, zone.longitude) * 1000;
+      return distM <= zone.radius_m;
+    });
+
+    if (blocked) {
+      setInsideZone(blocked.name);
+      setLocation(null);
+    } else {
+      setInsideZone(null);
+      setLocation({ latitude: lat, longitude: lon });
+    }
+    setLoading(false);
+    setError(null);
+  }, []);
+
+  const handleError = useCallback(() => {
+    setError("Please enable location access to discover nearby people");
+    setLoading(false);
+  }, []);
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
       return;
     }
+    // If already watching, do nothing
+    if (watchIdRef.current !== null) return;
 
     setLoading(true);
     setError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        // Check if inside any privacy zone (use ref to avoid stale closure)
-        const blocked = privacyZonesRef.current.find((zone) => {
-          const distM = calculateDistance(lat, lon, zone.latitude, zone.longitude) * 1000;
-          return distM <= zone.radius_m;
-        });
-
-        if (blocked) {
-          setInsideZone(blocked.name);
-          setLocation(null);
-        } else {
-          setInsideZone(null);
-          setLocation({ latitude: lat, longitude: lon });
-        }
-        setLoading(false);
-      },
-      () => {
-        setError("Please enable location access to discover nearby people");
-        setLoading(false);
-      },
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handlePosition,
+      handleError,
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
-  // Stable — never recreated; reads privacyZones via ref
+  }, [handlePosition, handleError]);
+
+  // Start watching on mount, clean up on unmount
+  useEffect(() => {
+    requestLocation();
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
   }, []);
 
   return { location, error, loading, insideZone, requestLocation };
