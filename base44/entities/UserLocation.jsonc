@@ -51,6 +51,13 @@
       },
       "description": "URLs of profile photos"
     },
+    "videos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs of profile videos"
+    },
     "profile_theme": {
       "type": "string",
       "default": "default",

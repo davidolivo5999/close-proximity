@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, Star, Shield, Pencil, Check } from "lucide-react";
+import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, Star, Shield, Pencil, Check, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -27,8 +27,10 @@ export default function Profile() {
   const [isVisible, setIsVisible] = useState(true);
   const [interests, setInterests] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [privacyZones, setPrivacyZones] = useState([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
@@ -88,6 +90,7 @@ export default function Profile() {
       setIsVisible(myLocation.is_visible !== false);
       setInterests(myLocation.interests || []);
       setPhotos(myLocation.photos || []);
+      setVideos(myLocation.videos || []);
       setPrivacyZones(myLocation.privacy_zones || []);
       setProfileTheme(myLocation.profile_theme || "default");
       setAvatarUrl(myLocation.avatar_url || "");
@@ -100,7 +103,7 @@ export default function Profile() {
     if (!myLocation) { toast.error("Please enable location first on the Discover tab"); return; }
     setSaving(true);
     await base44.entities.UserLocation.update(myLocation.id, {
-      bio, is_visible: isVisible, interests, photos, privacy_zones: privacyZones,
+      bio, is_visible: isVisible, interests, photos, videos, privacy_zones: privacyZones,
       profile_theme: profileTheme, avatar_url: avatarUrl, banner_url: bannerUrl,
       user_name: displayName || user?.full_name,
     });
@@ -183,6 +186,29 @@ export default function Profile() {
     await base44.entities.UserLocation.update(myLocation.id, { photos: updated });
     queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, photos: updated } : old);
   };
+  const handleVideoUpload = async (e) => {
+    if (!isAuthenticated(user)) { toast.error("Sign in to upload videos"); return; }
+    const file = e.target.files[0];
+    if (!file || !myLocation) return;
+    e.target.value = "";
+    setUploadingVideo(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const saved = [...videos, file_url];
+    setVideos(saved);
+    await base44.entities.UserLocation.update(myLocation.id, { videos: saved });
+    queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, videos: saved } : old);
+    setUploadingVideo(false);
+    toast.success("Video saved!");
+  };
+
+  const handleRemoveVideo = async (url) => {
+    if (!myLocation) return;
+    const updated = videos.filter((v) => v !== url);
+    setVideos(updated);
+    await base44.entities.UserLocation.update(myLocation.id, { videos: updated });
+    queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, videos: updated } : old);
+  };
+
   const handleLogout = () => base44.auth.logout("/");
 
   const handleDeleteProfile = async () => {
@@ -386,37 +412,69 @@ export default function Profile() {
 
         {/* PHOTOS TAB */}
         {activeTab === "photos" && (
-          <div className="bg-card rounded-2xl border border-border p-4">
-            <p className="text-sm font-semibold text-foreground mb-3">My Photos</p>
-            <div className="grid grid-cols-3 gap-2">
-              {photos.map((url, i) => (
-                <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePhoto(url)}
-                    className="absolute top-1.5 right-1.5 h-6 w-6 bg-black/60 backdrop-blur rounded-full flex items-center justify-center"
-                  >
-                    <X className="h-3.5 w-3.5 text-white" />
-                  </button>
-                </div>
-              ))}
-              {photos.length < 6 && (
-                <label className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
-                  {uploadingPhoto ? (
-                    <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Camera className="h-6 w-6 text-muted-foreground mb-1" />
-                      <span className="text-xs text-muted-foreground">Add photo</span>
-                    </>
-                  )}
-                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
-                </label>
-              )}
+          <>
+            <div className="bg-card rounded-2xl border border-border p-4">
+              <p className="text-sm font-semibold text-foreground mb-3">My Photos</p>
+              <div className="grid grid-cols-3 gap-2">
+                {photos.map((url, i) => (
+                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhoto(url)}
+                      className="absolute top-1.5 right-1.5 h-6 w-6 bg-black/60 backdrop-blur rounded-full flex items-center justify-center"
+                    >
+                      <X className="h-3.5 w-3.5 text-white" />
+                    </button>
+                  </div>
+                ))}
+                {photos.length < 6 && (
+                  <label className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                    {uploadingPhoto ? (
+                      <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Camera className="h-6 w-6 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Add photo</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+                  </label>
+                )}
+              </div>
             </div>
 
-          </div>
+            <div className="bg-card rounded-2xl border border-border p-4">
+              <p className="text-sm font-semibold text-foreground mb-3">My Videos</p>
+              <div className="space-y-2">
+                {videos.map((url, i) => (
+                  <div key={i} className="relative rounded-xl overflow-hidden bg-black">
+                    <video src={url} controls className="w-full max-h-56 rounded-xl" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVideo(url)}
+                      className="absolute top-2 right-2 h-6 w-6 bg-black/60 backdrop-blur rounded-full flex items-center justify-center"
+                    >
+                      <X className="h-3.5 w-3.5 text-white" />
+                    </button>
+                  </div>
+                ))}
+                {videos.length < 3 && (
+                  <label className="flex items-center justify-center gap-2 w-full py-4 rounded-xl border-2 border-dashed border-border cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                    {uploadingVideo ? (
+                      <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Video className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Add video</span>
+                      </>
+                    )}
+                    <input type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} disabled={uploadingVideo} />
+                  </label>
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {/* HANGOUTS TAB */}

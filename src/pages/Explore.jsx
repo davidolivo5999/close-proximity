@@ -2,13 +2,13 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Clock, Repeat2, Globe, Heart } from "lucide-react";
+import { Compass, Clock, Repeat2, Globe, Heart, Video } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 
-function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClick, photos, likeCounts }) {
+function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClick, photos, videos, likeCounts }) {
   // Sort photos by like count desc, then show up to 3
   const topPhotos = useMemo(() => {
     if (!photos?.length) return [];
@@ -60,6 +60,12 @@ function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClic
             </div>
           )}
           {meta && <div className="flex items-center gap-3 mt-1.5">{meta}</div>}
+          {videos?.length > 0 && (
+            <div className="flex items-center gap-1 mt-1">
+              <Video className="h-3 w-3 text-primary" />
+              <span className="text-xs text-primary font-medium">{videos.length} video{videos.length > 1 ? "s" : ""}</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.button>
@@ -185,6 +191,7 @@ export default function Explore() {
                     bio={enc.encountered_bio}
                     interests={enc.encountered_interests}
                     photos={locData?.photos}
+                    videos={locData?.videos}
                     likeCounts={globalLikeCounts}
                     meta={
                       <>
@@ -235,6 +242,7 @@ export default function Explore() {
                     bio={u.bio}
                     interests={u.interests}
                     photos={u.photos}
+                    videos={u.videos}
                     likeCounts={globalLikeCounts}
                     onClick={() => navigate(`/user/${u.user_id}`, {
                       state: { from: "/explore", userName: u.user_name }

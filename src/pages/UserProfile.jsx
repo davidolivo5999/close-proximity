@@ -190,7 +190,23 @@ export default function UserProfile() {
             </div>
           )}
 
-          {!locationData.bio && !locationData.interests?.length && !locationData.photos?.length && (
+          {/* Videos section */}
+          {locationData.videos?.length > 0 && (
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Videos · {locationData.videos.length}
+              </p>
+              <div className="space-y-2">
+                {locationData.videos.map((url, i) => (
+                  <div key={i} className="rounded-xl overflow-hidden bg-black">
+                    <video src={url} controls className="w-full max-h-64 rounded-xl" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!locationData.bio && !locationData.interests?.length && !locationData.photos?.length && !locationData.videos?.length && (
             <p className="text-sm text-muted-foreground text-center py-4">No profile info yet.</p>
           )}
         </div>
