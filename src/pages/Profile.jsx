@@ -254,7 +254,7 @@ export default function Profile() {
             <div className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background ${isVisible ? "bg-emerald-500" : "bg-muted-foreground"}`} />
           </div>
           <h1 className="text-2xl font-heading font-bold mt-3 text-foreground">{displayName || user?.full_name}</h1>
-          <p className="text-sm text-muted-foreground">{user?.email}</p>
+
 
           {/* Stats row */}
           <div className="flex items-center gap-8 mt-3 bg-card/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-border/50">
