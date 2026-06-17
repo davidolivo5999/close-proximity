@@ -352,17 +352,21 @@ export default function Nearby() {
         <div className="px-5 pt-3">
           {/* Location permission banner */}
           {locError && !isScanning && (
-            <div className="flex items-center justify-between gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-4">
+            <div className="flex flex-col gap-2 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-4">
               <div className="flex items-center gap-2">
                 <MapPinOff className="h-4 w-4 text-primary shrink-0" />
-                <p className="text-sm text-primary font-medium">Location access needed</p>
+                <p className="text-sm text-primary font-medium">Location access is blocked</p>
               </div>
+              <p className="text-xs text-primary/80">
+                To fix this, open your device <strong>Settings → Privacy → Location Services</strong> and allow location for this app, then reload the page.
+              </p>
               <Button
                 size="sm"
-                className="rounded-full px-4 shrink-0"
-                onClick={requestLocation}
+                variant="outline"
+                className="rounded-full px-4 w-fit border-primary/30 text-primary"
+                onClick={() => window.location.reload()}
               >
-                Enable
+                Reload after enabling
               </Button>
             </div>
           )}
