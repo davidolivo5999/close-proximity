@@ -64,6 +64,14 @@ export default function Friends() {
     return map;
   }, [allLocations, friendIds]);
 
+  const nameMap = useMemo(() => {
+    const map = {};
+    for (const loc of allLocations) {
+      if (friendIds.includes(loc.user_id) && loc.user_name) map[loc.user_id] = loc.user_name;
+    }
+    return map;
+  }, [allLocations, friendIds]);
+
   const filtered = friends.filter((f) =>
     f.name?.toLowerCase().includes(search.toLowerCase())
   );
@@ -107,7 +115,7 @@ export default function Friends() {
         ) : (
           <div className="space-y-3">
             {filtered.map((friend, i) => (
-              <FriendCard key={friend.id} friend={{ ...friend, avatarUrl: avatarMap[friend.id] }} index={i} />
+              <FriendCard key={friend.id} friend={{ ...friend, name: nameMap[friend.id] || friend.name, avatarUrl: avatarMap[friend.id] }} index={i} />
             ))}
             {filtered.length === 0 && search && (
               <p className="text-center text-sm text-muted-foreground py-8">
