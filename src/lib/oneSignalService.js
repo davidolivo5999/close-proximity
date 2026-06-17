@@ -9,10 +9,14 @@ export const oneSignalService = {
     if (initialized) return;
     initialized = true;
 
-    await OneSignal.init({
-      appId: ONESIGNAL_APP_ID,
-      allowLocalhostAsSecureOrigin: true,
-    });
+    try {
+      await OneSignal.init({
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: true,
+      });
+    } catch (e) {
+      console.warn("OneSignal init skipped:", e?.message);
+    }
   },
 
   async login(userId) {
