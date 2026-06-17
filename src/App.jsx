@@ -4,6 +4,7 @@ import { queryClientInstance } from "@/lib/query-client";
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import PageNotFound from "./lib/PageNotFound";
+import OneSignalVerificationDialog from "@/components/OneSignalVerificationDialog";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import { TabHistoryProvider } from "@/lib/TabHistoryContext";
 import UserNotRegisteredError from "@/components/UserNotRegisteredError";
@@ -108,6 +109,7 @@ function App() {
           </TabHistoryProvider>
         </Router>
         <Toaster />
+        <OneSignalVerificationDialog />
       </QueryClientProvider>
     </AuthProvider>
   );
