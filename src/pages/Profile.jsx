@@ -16,7 +16,6 @@ import UserAvatar from "@/components/shared/UserAvatar";
 import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
 import PrivacyZones from "@/components/profile/PrivacyZones";
-import ExportReport from "@/components/profile/ExportReport";
 import BlockedUsers from "@/components/profile/BlockedUsers";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 import VideoEditor from "@/components/profile/VideoEditor";
@@ -494,12 +493,7 @@ export default function Profile() {
 
         {/* HANGOUTS TAB */}
         {activeTab === "hangouts" && (
-          <>
-            <PastHangouts userId={user?.id} />
-            <div className="mt-2">
-              <ExportReport userId={user?.id} />
-            </div>
-          </>
+          <PastHangouts userId={user?.id} />
         )}
 
         {/* SETTINGS TAB */}
