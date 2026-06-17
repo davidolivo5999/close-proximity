@@ -2,38 +2,65 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Clock, Repeat2, Globe } from "lucide-react";
+import { Compass, Clock, Repeat2, Globe, Heart } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 
-function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClick }) {
+function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClick, photos, likeCounts }) {
+  // Sort photos by like count desc, then show up to 3
+  const topPhotos = useMemo(() => {
+    if (!photos?.length) return [];
+    return [...photos]
+      .sort((a, b) => (likeCounts?.[b] || 0) - (likeCounts?.[a] || 0))
+      .slice(0, 3);
+  }, [photos, likeCounts]);
+
   return (
     <motion.button
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
-      className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl border border-border hover:shadow-lg transition-shadow duration-300 text-left"
+      className="w-full bg-card rounded-2xl border border-border hover:shadow-lg transition-shadow duration-300 text-left overflow-hidden"
       onClick={onClick}
     >
-      <UserAvatar
-        name={name}
-        size="md"
-        colorIndex={userId?.charCodeAt(0) || 0}
-        avatarUrl={avatarUrl}
-      />
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-foreground truncate">{name || "Unknown"}</h3>
-        {bio && <p className="text-sm text-muted-foreground truncate mt-0.5">{bio}</p>}
-        {interests?.length > 0 && (
-          <div className="flex gap-1 mt-1.5 flex-wrap">
-            {interests.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs rounded-full py-0">{tag}</Badge>
-            ))}
-          </div>
-        )}
-        {meta && <div className="flex items-center gap-3 mt-1.5">{meta}</div>}
+      {/* Photo strip */}
+      {topPhotos.length > 0 && (
+        <div className="flex gap-0.5 h-28">
+          {topPhotos.map((url, i) => (
+            <div key={i} className={`relative flex-1 overflow-hidden ${i === 0 ? "rounded-tl-2xl" : ""} ${i === topPhotos.length - 1 ? "rounded-tr-2xl" : ""}`}>
+              <img src={url} alt="" className="w-full h-full object-cover" />
+              {(likeCounts?.[url] || 0) > 0 && (
+                <div className="absolute bottom-1 right-1 flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                  <Heart className="h-2.5 w-2.5 fill-rose-400 text-rose-400" />
+                  <span className="text-white text-[10px] font-semibold">{likeCounts[url]}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center gap-4 p-4">
+        <UserAvatar
+          name={name}
+          size="md"
+          colorIndex={userId?.charCodeAt(0) || 0}
+          avatarUrl={avatarUrl}
+        />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-foreground truncate">{name || "Unknown"}</h3>
+          {bio && <p className="text-sm text-muted-foreground truncate mt-0.5">{bio}</p>}
+          {interests?.length > 0 && (
+            <div className="flex gap-1 mt-1.5 flex-wrap">
+              {interests.slice(0, 3).map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs rounded-full py-0">{tag}</Badge>
+              ))}
+            </div>
+          )}
+          {meta && <div className="flex items-center gap-3 mt-1.5">{meta}</div>}
+        </div>
       </div>
     </motion.button>
   );
@@ -64,6 +91,22 @@ export default function Explore() {
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+
+  const { data: allLikes = [] } = useQuery({
+    queryKey: ["allPhotoLikes"],
+    queryFn: () => base44.entities.PhotoLike.list(),
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  // Build a map of photo_url -> like count
+  const globalLikeCounts = useMemo(() =>
+    allLikes.reduce((acc, l) => {
+      acc[l.photo_url] = (acc[l.photo_url] || 0) + 1;
+      return acc;
+    }, {}),
+    [allLikes]
+  );
 
   const sortedEncounters = useMemo(() =>
     [...encounters].sort((a, b) => new Date(b.last_seen_at) - new Date(a.last_seen_at)),
@@ -130,7 +173,9 @@ export default function Explore() {
               </div>
             ) : (
               <div className="space-y-3">
-                {sortedEncounters.map((enc, i) => (
+                {sortedEncounters.map((enc, i) => {
+                  const locData = allLocations.find(l => l.user_id === enc.encountered_user_id);
+                  return (
                   <UserCard
                     key={enc.id}
                     index={i}
@@ -139,6 +184,8 @@ export default function Explore() {
                     avatarUrl={enc.encountered_avatar_url}
                     bio={enc.encountered_bio}
                     interests={enc.encountered_interests}
+                    photos={locData?.photos}
+                    likeCounts={globalLikeCounts}
                     meta={
                       <>
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -157,7 +204,8 @@ export default function Explore() {
                       state: { from: "/explore", userName: enc.encountered_user_name }
                     })}
                   />
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
@@ -186,6 +234,8 @@ export default function Explore() {
                     avatarUrl={u.avatar_url}
                     bio={u.bio}
                     interests={u.interests}
+                    photos={u.photos}
+                    likeCounts={globalLikeCounts}
                     onClick={() => navigate(`/user/${u.user_id}`, {
                       state: { from: "/explore", userName: u.user_name }
                     })}
