@@ -17,6 +17,7 @@ import { INTEREST_TAGS } from "@/components/nearby/NearbyFilters";
 import PastHangouts from "@/components/profile/PastHangouts";
 import PrivacyZones from "@/components/profile/PrivacyZones";
 import ExportReport from "@/components/profile/ExportReport";
+import BlockedUsers from "@/components/profile/BlockedUsers.jsx";
 import ProfileThemePicker, { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 
 export default function Profile() {
@@ -418,6 +419,9 @@ export default function Profile() {
               <Save className="h-4 w-4 mr-2" />
               {saving ? "Saving..." : "Save Settings"}
             </Button>
+
+            {/* Blocked users */}
+            <BlockedUsers userId={user?.id} />
 
             {/* Account actions */}
             <div className="bg-card rounded-2xl border border-border overflow-hidden mt-2">
