@@ -12,6 +12,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import MediaReactions from "@/components/profile/MediaReactions";
 
 export default function UserProfile() {
   const { userId } = useParams();
@@ -164,27 +165,21 @@ export default function UserProfile() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                 Photos · {locationData.photos.length}
               </p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {locationData.photos.map((url, i) => (
-                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
-                    <button
-                      onClick={() => setLightboxPhoto(url)}
-                      className="w-full h-full"
-                    >
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {locationData.photos.map((url, i) => (
+                    <button key={i} onClick={() => setLightboxPhoto(url)} className="relative aspect-square rounded-xl overflow-hidden">
                       <img src={url} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
                     </button>
-                    {currentUser && currentUser.id !== userId && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleLike.mutate(url); }}
-                        className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1"
-                      >
-                        <Heart className={`h-3 w-3 ${likedUrls.has(url) ? "fill-rose-500 text-rose-500" : "text-white"}`} />
-                        {likeCounts[url] > 0 && (
-                          <span className="text-white text-[10px] font-semibold">{likeCounts[url]}</span>
-                        )}
-                      </button>
-                    )}
-                  </div>
+                  ))}
+                </div>
+                {locationData.photos.map((url, i) => (
+                  currentUser && currentUser.id !== userId && (
+                    <div key={i} className="px-1">
+                      <p className="text-xs text-muted-foreground mb-1 truncate">{url.split("/").pop()?.slice(0, 30) || `Photo ${i + 1}`}</p>
+                      <MediaReactions mediaUrl={url} mediaOwnerId={userId} currentUser={currentUser} />
+                    </div>
+                  )
                 ))}
               </div>
             </div>
@@ -196,10 +191,17 @@ export default function UserProfile() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                 Videos · {locationData.videos.length}
               </p>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {locationData.videos.map((url, i) => (
-                  <div key={i} className="rounded-xl overflow-hidden bg-black">
-                    <video src={url} controls className="w-full max-h-64 rounded-xl" />
+                  <div key={i}>
+                    <div className="rounded-xl overflow-hidden bg-black">
+                      <video src={url} controls className="w-full max-h-64 rounded-xl" />
+                    </div>
+                    {currentUser && currentUser.id !== userId && (
+                      <div className="mt-1 px-1">
+                        <MediaReactions mediaUrl={url} mediaOwnerId={userId} currentUser={currentUser} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

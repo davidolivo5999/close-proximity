@@ -1,0 +1,52 @@
+{
+  "name": "MediaReaction",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL of the photo or video"
+    },
+    "media_owner_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "like",
+        "fire",
+        "wow",
+        "haha",
+        "love"
+      ],
+      "description": "Quick reaction emoji"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional short text reaction"
+    }
+  },
+  "required": [
+    "user_id",
+    "media_url",
+    "media_owner_id",
+    "type"
+  ],
+  "rls": {
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "read": {},
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}
