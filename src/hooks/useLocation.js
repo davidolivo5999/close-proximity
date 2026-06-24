@@ -1,10 +1,19 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 
+// How long to wait after mount before surfacing a location error to the UI.
+// This prevents the "blocked" banner from flashing before the OS permission
+// prompt has had a chance to appear and be answered (especially on iPad/tablet
+// where the prompt is a popover and can take longer to resolve).
+const ERROR_GRACE_PERIOD_MS = 5000;
+
 export function useUserLocation(privacyZones = []) {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [insideZone, setInsideZone] = useState(null);
+  // Tracks whether we're still inside the grace period after mount/request
+  const [withinGracePeriod, setWithinGracePeriod] = useState(true);
+  const gracePeriodTimerRef = useRef(null);
 
   const privacyZonesRef = useRef(privacyZones);
   useEffect(() => { privacyZonesRef.current = privacyZones; }, [privacyZones]);
@@ -37,6 +46,14 @@ export function useUserLocation(privacyZones = []) {
     setLoading(false);
   }, []);
 
+  const startGracePeriod = useCallback(() => {
+    setWithinGracePeriod(true);
+    if (gracePeriodTimerRef.current) clearTimeout(gracePeriodTimerRef.current);
+    gracePeriodTimerRef.current = setTimeout(() => {
+      setWithinGracePeriod(false);
+    }, ERROR_GRACE_PERIOD_MS);
+  }, []);
+
   const startWatch = useCallback(() => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
@@ -51,13 +68,14 @@ export function useUserLocation(privacyZones = []) {
 
     setLoading(true);
     setError(null);
+    startGracePeriod();
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       handlePosition,
       handleError,
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
-  }, [handlePosition, handleError]);
+  }, [handlePosition, handleError, startGracePeriod]);
 
   const requestLocation = useCallback(() => {
     startWatch();
@@ -72,10 +90,15 @@ export function useUserLocation(privacyZones = []) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
+      if (gracePeriodTimerRef.current) clearTimeout(gracePeriodTimerRef.current);
     };
   }, []);
 
-  return { location, error, loading, insideZone, requestLocation };
+  // Suppress error during grace period — avoids false "blocked" flash before
+  // the OS permission prompt has been answered (especially on iPad)
+  const visibleError = withinGracePeriod ? null : error;
+
+  return { location, error: visibleError, loading, insideZone, requestLocation };
 }
 
 export function calculateDistance(lat1, lon1, lat2, lon2) {
