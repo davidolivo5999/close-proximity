@@ -27,6 +27,7 @@ import Pro from "@/pages/Pro";
 import Messages from "@/pages/Messages";
 import Conversation from "@/pages/Conversation";
 import Explore from "@/pages/Explore";
+import Support from "@/pages/Support";
 
 // Fade transition for tab switches
 const PageWrapper = ({ children }) => (
@@ -92,6 +93,7 @@ const AuthenticatedApp = () => {
           <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
           <Route path="/messages/:peerId" element={<SlideWrapper><Conversation /></SlideWrapper>} />
           <Route path="/user/:userId" element={<SlideWrapper><UserProfile /></SlideWrapper>} />
+          <Route path="/support" element={<SlideWrapper><Support /></SlideWrapper>} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
