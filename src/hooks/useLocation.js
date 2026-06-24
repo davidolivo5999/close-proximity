@@ -41,8 +41,10 @@ export function useUserLocation(privacyZones = []) {
   }, []);
 
   const handleError = useCallback((err) => {
-    console.error("Geolocation error:", err?.code, err?.message);
-    setError("Please enable location access to discover nearby people");
+    const codeMap = { 1: "PERMISSION_DENIED", 2: "POSITION_UNAVAILABLE", 3: "TIMEOUT" };
+    const codeLabel = codeMap[err?.code] || `UNKNOWN(${err?.code})`;
+    console.error(`[Geolocation] code=${codeLabel} message="${err?.message}"`);
+    setError(`Location error: ${codeLabel} — ${err?.message || "no message"}`);
     setLoading(false);
   }, []);
 
