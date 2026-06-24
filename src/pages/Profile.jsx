@@ -20,6 +20,20 @@ import BlockedUsers from "@/components/profile/BlockedUsers";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 import VideoEditor from "@/components/profile/VideoEditor";
 
+// Colorful gradient pills for interests
+const INTEREST_COLORS = [
+  "bg-gradient-to-r from-red-400 to-orange-400",
+  "bg-gradient-to-r from-blue-400 to-cyan-400",
+  "bg-gradient-to-r from-emerald-400 to-teal-500",
+  "bg-gradient-to-r from-violet-500 to-purple-500",
+  "bg-gradient-to-r from-pink-400 to-rose-400",
+  "bg-gradient-to-r from-amber-400 to-yellow-400",
+  "bg-gradient-to-r from-sky-400 to-blue-500",
+  "bg-gradient-to-r from-fuchsia-400 to-pink-500",
+];
+
+const getInterestColor = (tag) => INTEREST_COLORS[Math.abs(tag.charCodeAt(0) + tag.charCodeAt(tag.length - 1)) % INTEREST_COLORS.length];
+
 export default function Profile() {
   const queryClient = useQueryClient();
   const [bio, setBio] = useState("");
@@ -40,6 +54,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
   const [editingName, setEditingName] = useState(false);
+  const [editingInterests, setEditingInterests] = useState(false);
   const [activeTab, setActiveTab] = useState("about");
 
   const { data: user } = useQuery({
@@ -113,20 +128,19 @@ export default function Profile() {
     setSaving(false);
     setEditingBio(false);
     setEditingName(false);
+    setEditingInterests(false);
   };
 
   const handlePhotoUpload = async (e) => {
     if (!isAuthenticated(user)) { toast.error("Sign in to upload photos"); return; }
     const file = e.target.files[0];
     if (!file || !myLocation) return;
-    // Reset input so same file can be re-selected
     e.target.value = "";
     setUploadingPhoto(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     const saved = [...photos, file_url];
     setPhotos(saved);
     await base44.entities.UserLocation.update(myLocation.id, { photos: saved });
-    // Update cache directly instead of invalidating to avoid useEffect resetting state
     queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, photos: saved } : old);
     setUploadingPhoto(false);
     toast.success("Photo saved!");
@@ -137,7 +151,6 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
     e.target.value = "";
-    // Show local preview instantly
     const localUrl = URL.createObjectURL(file);
     setAvatarUrl(localUrl);
     setUploadingAvatar(true);
@@ -146,7 +159,6 @@ export default function Profile() {
     setAvatarUrl(file_url);
     if (myLocation) {
       await base44.entities.UserLocation.update(myLocation.id, { avatar_url: file_url });
-      // Update cache directly to avoid state reset race condition
       queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, avatar_url: file_url } : old);
       toast.success("Profile picture updated!");
     }
@@ -187,12 +199,12 @@ export default function Profile() {
     await base44.entities.UserLocation.update(myLocation.id, { photos: updated });
     queryClient.setQueryData(["myLocation", user?.id], (old) => old ? { ...old, photos: updated } : old);
   };
+
   const handleVideoUpload = (e) => {
     if (!isAuthenticated(user)) { toast.error("Sign in to upload videos"); return; }
     const file = e.target.files[0];
     if (!file || !myLocation) return;
     e.target.value = "";
-    // Always open the editor so user can trim / confirm
     setPendingVideoFile(file);
   };
 
@@ -236,7 +248,7 @@ export default function Profile() {
   ];
 
   return (
-    <div style={{ marginBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#f2f2ed", marginBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
       {pendingVideoFile && (
         <VideoEditor
           file={pendingVideoFile}
@@ -244,18 +256,36 @@ export default function Profile() {
           onCancel={() => setPendingVideoFile(null)}
         />
       )}
-      {!isAuthenticated(user) && (
-        <div className="bg-primary/10 border-b border-primary/20 px-5 py-2.5 text-center text-sm text-primary font-medium">
-          👀 Preview Mode — Sign in to customize your profile
-        </div>
-      )}
-      {/* Hero */}
-      <div className="relative">
-        {/* Banner */}
-        <div className={`relative h-36 ${bannerUrl ? "" : `bg-gradient-to-br ${PROFILE_THEMES.find(t => t.id === profileTheme)?.gradient || "from-primary/20 to-accent/20"}`}`}>
-          {bannerUrl && <img src={bannerUrl} alt="Profile banner" className="w-full h-full object-cover" />}
-          <div className="absolute bottom-2 right-2 flex gap-1.5">
-            <label className="flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full px-2.5 py-1 cursor-pointer hover:bg-black/70 transition-colors">
+
+      {/* Hero Banner — full-bleed gradient */}
+      <div className="relative" style={{ background: "linear-gradient(135deg, #f97316 0%, #ec4899 100%)", minHeight: "200px" }}>
+        {bannerUrl && (
+          <img src={bannerUrl} alt="Profile banner" className="absolute inset-0 w-full h-full object-cover" />
+        )}
+
+        {/* Preview mode notice pill */}
+        {!isAuthenticated(user) && (
+          <div className="absolute top-3 left-4 right-4 flex items-center justify-between gap-2 z-10">
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-sm font-medium text-gray-800">
+              <span>👀</span>
+              <span><strong>Preview Mode</strong> — Sign in to customize your profile.</span>
+            </div>
+            <label className="flex items-center gap-1.5 bg-gray-900 text-white text-xs font-semibold rounded-full px-3 py-2 cursor-pointer whitespace-nowrap">
+              {uploadingBanner ? (
+                <div className="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Camera className="h-3.5 w-3.5" />
+              )}
+              Add banner
+              <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={uploadingBanner} />
+            </label>
+          </div>
+        )}
+
+        {/* Banner controls when logged in */}
+        {isAuthenticated(user) && (
+          <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+            <label className="flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full px-2.5 py-1.5 cursor-pointer hover:bg-black/70 transition-colors">
               {uploadingBanner ? (
                 <div className="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
@@ -265,68 +295,77 @@ export default function Profile() {
               <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={uploadingBanner} />
             </label>
             {bannerUrl && (
-              <button
-                onClick={handleRemoveBanner}
-                className="flex items-center bg-black/50 backdrop-blur-sm text-white rounded-full px-2 py-1 hover:bg-black/70 transition-colors"
-              >
+              <button onClick={handleRemoveBanner} className="flex items-center bg-black/50 backdrop-blur-sm text-white rounded-full px-2 py-1.5 hover:bg-black/70 transition-colors">
                 <X className="h-3 w-3" />
               </button>
             )}
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-col items-center pb-6 px-5" style={{ marginTop: "-2.5rem" }}>
-          <div className="relative">
-            <UserAvatar
-              name={user?.full_name}
-              size="xl"
-              colorIndex={user?.id?.charCodeAt(0) || 0}
-              avatarUrl={avatarUrl}
-            />
-            <label className="absolute inset-0 rounded-full cursor-pointer flex items-end justify-center pb-1 bg-black/0 hover:bg-black/30 transition-colors group">
-              {uploadingAvatar ? (
+        {/* Avatar — overlapping bottom of banner */}
+        <div className="flex justify-center" style={{ paddingTop: "60px", paddingBottom: "0px" }}>
+          <div className="relative" style={{ marginBottom: "-48px" }}>
+            <div style={{ padding: "4px", background: "linear-gradient(135deg, #f97316, #ec4899)", borderRadius: "9999px" }}>
+              <div style={{ padding: "3px", backgroundColor: "white", borderRadius: "9999px" }}>
+                <UserAvatar
+                  name={user?.full_name}
+                  size="xl"
+                  colorIndex={user?.id?.charCodeAt(0) || 0}
+                  avatarUrl={avatarUrl}
+                />
+              </div>
+            </div>
+            <label className="absolute inset-0 rounded-full cursor-pointer flex items-end justify-center pb-1 bg-black/0 hover:bg-black/20 transition-colors group">
+              {uploadingAvatar && (
                 <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin mb-1" />
-              ) : (
-                <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity mb-1" />
               )}
               <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
             </label>
-            <div className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-background ${isVisible ? "bg-emerald-500" : "bg-muted-foreground"}`} />
-          </div>
-          <h1 className="text-2xl font-heading font-bold mt-3 text-foreground">{displayName || user?.full_name}</h1>
-
-
-          {/* Stats row */}
-          <div className="flex items-center gap-8 mt-3 bg-card/60 backdrop-blur-sm rounded-2xl px-6 py-3 border border-border/50">
-            <div className="text-center">
-              <p className="text-xl font-bold text-foreground">{friendCount}</p>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Friends</p>
-            </div>
-            <div className="w-px h-8 bg-border" />
-            <div className="text-center">
-              <p className="text-xl font-bold text-foreground">{interests.length}</p>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Star className="h-3 w-3" /> Interests</p>
-            </div>
-            <div className="w-px h-8 bg-border" />
-            <div className="text-center">
-              <p className="text-xl font-bold text-foreground">{photos.length}</p>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1"><Camera className="h-3 w-3" /> Photos</p>
-            </div>
+            {/* Online indicator */}
+            <div className={`absolute bottom-1 right-1 h-5 w-5 rounded-full border-2 border-white ${isVisible ? "bg-emerald-500" : "bg-gray-400"}`} />
           </div>
         </div>
       </div>
 
+      {/* Stats cards — 3 colored cards */}
+      <div className="px-4 pt-14 pb-4 grid grid-cols-3 gap-3">
+        {/* Friends — orange */}
+        <div className="rounded-2xl p-4 text-white" style={{ background: "linear-gradient(135deg, #f97316, #fb923c)" }}>
+          <div className="flex items-start justify-between">
+            <p className="text-3xl font-bold">{friendCount}</p>
+            <Users className="h-6 w-6 opacity-80" />
+          </div>
+          <p className="text-sm font-medium mt-1 opacity-90">Friends</p>
+        </div>
+        {/* Interests — teal */}
+        <div className="rounded-2xl p-4 text-white" style={{ background: "linear-gradient(135deg, #0d9488, #14b8a6)" }}>
+          <div className="flex items-start justify-between">
+            <p className="text-3xl font-bold">{interests.length}</p>
+            <Star className="h-6 w-6 opacity-80" />
+          </div>
+          <p className="text-sm font-medium mt-1 opacity-90">Interests</p>
+        </div>
+        {/* Photos — purple */}
+        <div className="rounded-2xl p-4 text-white" style={{ background: "linear-gradient(135deg, #7c3aed, #8b5cf6)" }}>
+          <div className="flex items-start justify-between">
+            <p className="text-3xl font-bold">{photos.length}</p>
+            <Camera className="h-6 w-6 opacity-80" />
+          </div>
+          <p className="text-sm font-medium mt-1 opacity-90">Photos</p>
+        </div>
+      </div>
+
       {/* Tabs */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="flex px-5">
+      <div className="px-4 pb-3">
+        <div className="flex bg-white rounded-2xl p-1 shadow-sm">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${
+              className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
                 activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-gray-500 hover:text-gray-800"
               }`}
             >
               {tab.label}
@@ -335,17 +374,19 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="px-5 pt-5 space-y-4">
+      {/* Tab Content */}
+      <div className="px-4 space-y-3 pb-4">
+
         {/* ABOUT TAB */}
         {activeTab === "about" && (
           <>
-            {/* Display name card */}
-            <div className="bg-card rounded-2xl border border-border p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-foreground">Display Name</p>
+            {/* Display Name */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-base font-bold text-gray-900">Display Name</p>
                 <button
                   onClick={() => editingName ? handleSave() : setEditingName(true)}
-                  className="flex items-center gap-1 text-xs text-primary font-medium"
+                  className="flex items-center gap-1 text-sm text-gray-500 font-medium"
                 >
                   {editingName ? <><Check className="h-3.5 w-3.5" /> Save</> : <><Pencil className="h-3.5 w-3.5" /> Edit</>}
                 </button>
@@ -355,22 +396,22 @@ export default function Profile() {
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full rounded-xl bg-muted/50 border-0 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="w-full rounded-xl bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30"
                   autoFocus
                   placeholder="Your display name"
                 />
               ) : (
-                <p className="text-sm text-muted-foreground">{displayName || user?.full_name || "No name set"}</p>
+                <p className="text-sm text-gray-500">{displayName || user?.full_name || "No name set"}</p>
               )}
             </div>
 
-            {/* Bio card */}
-            <div className="bg-card rounded-2xl border border-border p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-foreground">Bio</p>
+            {/* Bio */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-base font-bold text-gray-900">Bio</p>
                 <button
                   onClick={() => editingBio ? handleSave() : setEditingBio(true)}
-                  className="flex items-center gap-1 text-xs text-primary font-medium"
+                  className="flex items-center gap-1 text-sm text-gray-500 font-medium"
                 >
                   {editingBio ? <><Check className="h-3.5 w-3.5" /> Save</> : <><Pencil className="h-3.5 w-3.5" /> Edit</>}
                 </button>
@@ -380,45 +421,96 @@ export default function Profile() {
                   placeholder="Tell people a little about yourself..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="rounded-xl resize-none bg-muted/50 border-0 focus-visible:ring-primary/30"
+                  className="rounded-xl resize-none bg-gray-50 border-gray-200 focus-visible:ring-primary/30"
                   rows={3}
                   autoFocus
                 />
               ) : (
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-gray-500 leading-relaxed">
                   {bio || "No bio yet. Tap Edit to add one."}
                 </p>
               )}
             </div>
 
-            {/* Interests card */}
-            <div className="bg-card rounded-2xl border border-border p-4">
-              <p className="text-sm font-semibold text-foreground mb-3">Interests</p>
-              <div className="flex flex-wrap gap-1.5">
-                {INTEREST_TAGS.map((tag) => {
-                  const active = interests.includes(tag);
-                  return (
-                    <button
+            {/* Interests */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-base font-bold text-gray-900">Interests</p>
+                <button
+                  onClick={() => editingInterests ? handleSave() : setEditingInterests(true)}
+                  className="flex items-center gap-1 text-sm text-gray-500 font-medium"
+                >
+                  {editingInterests ? <><Check className="h-3.5 w-3.5" /> Save</> : <><Pencil className="h-3.5 w-3.5" /> Edit</>}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {editingInterests ? (
+                  INTEREST_TAGS.map((tag) => {
+                    const active = interests.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() =>
+                          setInterests(active ? interests.filter((t) => t !== tag) : [...interests, tag])
+                        }
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold border-2 transition-all ${
+                          active
+                            ? "border-primary bg-primary text-white"
+                            : "border-gray-200 bg-gray-50 text-gray-600"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })
+                ) : interests.length > 0 ? (
+                  interests.map((tag) => (
+                    <span
                       key={tag}
-                      type="button"
-                      onClick={() =>
-                        setInterests(active ? interests.filter((t) => t !== tag) : [...interests, tag])
-                      }
-                      className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-all ${
-                        active
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20"
-                          : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40"
-                      }`}
+                      className={`${getInterestColor(tag)} text-white rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm`}
                     >
                       {tag}
-                    </button>
-                  );
-                })}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-400">No interests yet. Tap Edit to add some.</p>
+                )}
               </div>
-              {interests.length > 0 && (
-                <Button onClick={handleSave} disabled={saving} size="sm" className="mt-3 rounded-xl">
-                  {saving ? "Saving..." : "Save interests"}
-                </Button>
+            </div>
+
+            {/* Photo Grid preview in About */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-baseline justify-between mb-1">
+                <p className="text-base font-bold text-gray-900">Photo Grid</p>
+              </div>
+              <p className="text-xs text-gray-400 mb-3">{photos.length} Photos</p>
+              {photos.length === 0 ? (
+                <div className="relative">
+                  <div className="grid grid-cols-4 gap-1.5 opacity-30">
+                    {[...Array(8)].map((_, i) => (
+                      <div key={i} className="aspect-square rounded-xl bg-gray-200 flex items-center justify-center">
+                        <Camera className="h-4 w-4 text-gray-400" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <Camera className="h-7 w-7 text-gray-400 mb-1" />
+                    <p className="text-sm font-semibold text-gray-600 mb-2">No photos yet</p>
+                    <label className="bg-white border border-gray-200 text-gray-800 text-sm font-semibold rounded-xl px-4 py-1.5 cursor-pointer shadow-sm">
+                      Add Photos
+                      <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {photos.slice(0, 8).map((url, i) => (
+                    <div key={i} className="aspect-square rounded-xl overflow-hidden">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </>
@@ -427,8 +519,8 @@ export default function Profile() {
         {/* PHOTOS TAB */}
         {activeTab === "photos" && (
           <>
-            <div className="bg-card rounded-2xl border border-border p-4">
-              <p className="text-sm font-semibold text-foreground mb-3">My Photos</p>
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <p className="text-base font-bold text-gray-900 mb-3">My Photos</p>
               <div className="grid grid-cols-3 gap-2">
                 {photos.map((url, i) => (
                   <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
@@ -443,13 +535,13 @@ export default function Profile() {
                   </div>
                 ))}
                 {photos.length < 6 && (
-                  <label className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                  <label className="aspect-square rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-gray-50 transition-colors">
                     {uploadingPhoto ? (
                       <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Camera className="h-6 w-6 text-muted-foreground mb-1" />
-                        <span className="text-xs text-muted-foreground">Add photo</span>
+                        <Camera className="h-6 w-6 text-gray-400 mb-1" />
+                        <span className="text-xs text-gray-400">Add photo</span>
                       </>
                     )}
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
@@ -458,8 +550,8 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border p-4">
-              <p className="text-sm font-semibold text-foreground mb-3">My Videos</p>
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <p className="text-base font-bold text-gray-900 mb-3">My Videos</p>
               <div className="space-y-2">
                 {videos.map((url, i) => (
                   <div key={i} className="relative rounded-xl overflow-hidden bg-black">
@@ -474,13 +566,13 @@ export default function Profile() {
                   </div>
                 ))}
                 {videos.length < 3 && (
-                  <label className="flex items-center justify-center gap-2 w-full py-4 rounded-xl border-2 border-dashed border-border cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                  <label className="flex items-center justify-center gap-2 w-full py-4 rounded-xl border-2 border-dashed border-gray-200 cursor-pointer hover:border-primary/50 hover:bg-gray-50 transition-colors">
                     {uploadingVideo ? (
                       <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Video className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Add video</span>
+                        <Video className="h-5 w-5 text-gray-400" />
+                        <span className="text-sm text-gray-400">Add video</span>
                       </>
                     )}
                     <input type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} disabled={uploadingVideo} />
@@ -500,70 +592,70 @@ export default function Profile() {
         {activeTab === "settings" && (
           <>
             {/* Visibility */}
-            <div className="bg-card rounded-2xl border border-border p-4 flex items-center justify-between">
+            <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${isVisible ? "bg-emerald-100" : "bg-muted"}`}>
-                  {isVisible ? <Eye className="h-4 w-4 text-emerald-600" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${isVisible ? "bg-emerald-100" : "bg-gray-100"}`}>
+                  {isVisible ? <Eye className="h-5 w-5 text-emerald-600" /> : <EyeOff className="h-5 w-5 text-gray-400" />}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">Discoverable</p>
-                  <p className="text-xs text-muted-foreground">Show up on the Nearby map</p>
+                  <p className="text-sm font-semibold text-gray-900">Discoverable</p>
+                  <p className="text-xs text-gray-400">Show up on the Nearby map</p>
                 </div>
               </div>
-              <Switch checked={isVisible} onCheckedChange={(v) => { setIsVisible(v); }} />
+              <Switch checked={isVisible} onCheckedChange={(v) => setIsVisible(v)} />
             </div>
 
-            {/* Privacy zones */}
-            <div className="bg-card rounded-2xl border border-border p-4">
+            {/* Privacy Zones */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center">
-                  <Shield className="h-4 w-4 text-accent" />
+                <div className="h-10 w-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-violet-500" />
                 </div>
-                <p className="text-sm font-semibold text-foreground">Privacy Zones</p>
+                <p className="text-sm font-semibold text-gray-900">Privacy Zones</p>
               </div>
               <PrivacyZones zones={privacyZones} onChange={setPrivacyZones} />
             </div>
 
-            <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl">
+            <Button onClick={handleSave} disabled={saving} className="w-full rounded-xl h-11 font-semibold">
               <Save className="h-4 w-4 mr-2" />
               {saving ? "Saving..." : "Save Settings"}
             </Button>
 
-            {/* Blocked users */}
+            {/* Blocked Users */}
             <BlockedUsers userId={user?.id} />
 
             {/* Account actions */}
-            <div className="bg-card rounded-2xl border border-border overflow-hidden mt-2">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <Link
                 to="/support"
-                className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">Support</span>
+                  <HelpCircle className="h-5 w-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-800">Support</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <ChevronRight className="h-4 w-4 text-gray-300" />
               </Link>
-              <div className="border-t border-border" />
+              <div className="border-t border-gray-100" />
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <LogOut className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">Sign Out</span>
+                  <LogOut className="h-5 w-5 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-800">Sign Out</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <ChevronRight className="h-4 w-4 text-gray-300" />
               </button>
-              <div className="border-t border-border" />
+              <div className="border-t border-gray-100" />
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-destructive/5 transition-colors">
+                  <button className="w-full flex items-center justify-between px-4 py-4 hover:bg-red-50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <Trash2 className="h-4 w-4 text-destructive/70" />
-                      <span className="text-sm text-destructive/80">Delete Profile</span>
+                      <Trash2 className="h-5 w-5 text-red-400" />
+                      <span className="text-sm font-medium text-red-500">Delete Profile</span>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 text-gray-300" />
                   </button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
