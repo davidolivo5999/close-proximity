@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, Star, Shield, Pencil, Check, Video } from "lucide-react";
+import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, Star, Shield, Pencil, Check, Video, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -534,6 +534,17 @@ export default function Profile() {
 
             {/* Account actions */}
             <div className="bg-card rounded-2xl border border-border overflow-hidden mt-2">
+              <Link
+                to="/support"
+                className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-foreground">Support</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
+              <div className="border-t border-border" />
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors"
