@@ -42,7 +42,14 @@
       ]
     },
     "update": {
-      "data.from_user_id": "{{user.id}}"
+      "$or": [
+        {
+          "data.from_user_id": "{{user.id}}"
+        },
+        {
+          "data.to_user_id": "{{user.id}}"
+        }
+      ]
     },
     "delete": {
       "data.from_user_id": "{{user.id}}"
