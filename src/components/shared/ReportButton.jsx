@@ -38,7 +38,24 @@ export default function ReportButton({
         notes,
         status: "pending",
       });
-      toast.success("Report submitted. Thank you — we'll review it promptly.");
+
+      // Auto-block the reported user
+      await base44.entities.Block.create({
+        blocker_id: currentUser.id,
+        blocked_id: reportedUserId,
+      });
+
+      // Remove any accepted friend requests between the two users
+      const friendships = await base44.entities.FriendRequest.filter({
+        status: "accepted",
+        $or: [
+          { from_user_id: currentUser.id, to_user_id: reportedUserId },
+          { from_user_id: reportedUserId, to_user_id: currentUser.id },
+        ],
+      });
+      await Promise.all(friendships.map(f => base44.entities.FriendRequest.delete(f.id)));
+
+      toast.success("Report submitted. The user has been blocked and removed from your friends.");
       setOpen(false);
       setReason("");
       setNotes("");
