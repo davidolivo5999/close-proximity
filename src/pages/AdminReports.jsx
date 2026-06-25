@@ -2,9 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Flag, Trash2, CheckCircle2, Clock, Eye, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Flag, Trash2, CheckCircle2, Eye, Loader2, RefreshCw, ShieldCheck, Ban } from "lucide-react";
 import { toast } from "sonner";
 import UserAvatar from "@/components/shared/UserAvatar";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_COLORS = {
   pending: "bg-amber-100 text-amber-700 border-amber-200",
@@ -24,7 +28,8 @@ export default function AdminReports() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("pending");
-  const [actingOn, setActingOn] = useState(null); // report id being actioned
+  const [actingOn, setActingOn] = useState(null);
+  const [banTarget, setBanTarget] = useState(null); // { userId, userName, reportId }
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -101,6 +106,22 @@ export default function AdminReports() {
       }
     } catch (err) {
       toast.error("Failed: " + err.message);
+    } finally {
+      setActingOn(null);
+    }
+  };
+
+  const handleBanUser = async () => {
+    if (!banTarget) return;
+    setActingOn(banTarget.reportId + "-ban");
+    setBanTarget(null);
+    try {
+      const res = await base44.functions.invoke("banUser", { targetUserId: banTarget.userId });
+      if (res.data?.error) throw new Error(res.data.error);
+      queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+      toast.success(`${banTarget.userName} has been banned and all their content removed.`);
+    } catch (err) {
+      toast.error("Ban failed: " + err.message);
     } finally {
       setActingOn(null);
     }
@@ -253,33 +274,48 @@ export default function AdminReports() {
 
             {/* Actions — only for non-resolved/dismissed */}
             {(report.status === "pending" || report.status === "reviewed") && (
-              <div className="px-4 pb-4 flex gap-2">
-                {(report.content_type === "photo" || report.content_type === "video") && report.content_url && (
+              <div className="px-4 pb-4 space-y-2">
+                <div className="flex gap-2">
+                  {(report.content_type === "photo" || report.content_type === "video") && report.content_url && (
+                    <button
+                      onClick={() => handleDeleteContent(report)}
+                      disabled={!!actingOn}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                      style={{ background: "linear-gradient(135deg, #f97316, #ec4899)" }}
+                    >
+                      {actingOn === report.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                      Delete Content
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleDeleteContent(report)}
+                    onClick={() => handleDismiss(report)}
                     disabled={!!actingOn}
-                    className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
-                    style={{ background: "linear-gradient(135deg, #f97316, #ec4899)" }}
+                    className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
                   >
-                    {actingOn === report.id ? (
+                    {actingOn === report.id + "-dismiss" ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Trash2 className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     )}
-                    Delete Content
+                    Dismiss
                   </button>
-                )}
+                </div>
+                {/* Ban user — full width, destructive */}
                 <button
-                  onClick={() => handleDismiss(report)}
+                  onClick={() => setBanTarget({ userId: report.reported_user_id, userName: report.reported_user_name || "this user", reportId: report.id })}
                   disabled={!!actingOn}
-                  className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
-                  {actingOn === report.id + "-dismiss" ? (
+                  {actingOn === report.id + "-ban" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Ban className="h-4 w-4" />
                   )}
-                  Dismiss
+                  Ban User & Delete All Content
                 </button>
               </div>
             )}
@@ -293,6 +329,23 @@ export default function AdminReports() {
           </div>
         ))}
       </div>
+      {/* Ban confirmation dialog */}
+      <AlertDialog open={!!banTarget} onOpenChange={(open) => { if (!open) setBanTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ban {banTarget?.userName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete their account, all photos, videos, messages, friend connections, and hangouts. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBanUser} className="bg-red-600 hover:bg-red-700 text-white">
+              Yes, Ban & Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
