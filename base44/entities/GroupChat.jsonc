@@ -1,0 +1,52 @@
+{
+  "name": "GroupChat",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Group name"
+    },
+    "created_by_id": {
+      "type": "string"
+    },
+    "member_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User IDs of all members"
+    },
+    "member_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "name",
+    "created_by_id",
+    "member_ids"
+  ],
+  "rls": {
+    "create": {
+      "data.created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "data.member_ids": "{{user.id}}"
+    },
+    "update": {
+      "data.member_ids": "{{user.id}}"
+    },
+    "delete": {
+      "data.created_by_id": "{{user.id}}"
+    }
+  }
+}

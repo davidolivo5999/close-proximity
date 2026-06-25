@@ -1,14 +1,16 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Users, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import NewGroupChatDialog from "@/components/messages/NewGroupChatDialog";
 
 export default function Messages() {
   const navigate = useNavigate();
+  const [showNewGroup, setShowNewGroup] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -98,22 +100,75 @@ export default function Messages() {
     return map;
   }, [allLocations, peerIds]);
 
+  const { data: groupChats = [] } = useQuery({
+    queryKey: ["groupChats", user?.id],
+    queryFn: () => base44.entities.GroupChat.filter({ member_ids: user.id }, "-last_message_at", 50),
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   return (
     <div>
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 safe-area-top">
-        <h1 className="text-2xl font-heading font-bold text-foreground">Messages</h1>
-        <p className="text-sm text-muted-foreground">Direct conversations</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-heading font-bold text-foreground">Messages</h1>
+            <p className="text-sm text-muted-foreground">Direct &amp; group conversations</p>
+          </div>
+          <button
+            onClick={() => setShowNewGroup(true)}
+            className="flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-semibold text-primary-foreground"
+            style={{ background: "linear-gradient(135deg, #f97316, #ec4899)" }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Group
+          </button>
+        </div>
       </div>
 
       <div className="px-5 pt-4">
-        {conversations.length === 0 ? (
+        {/* Group chats */}
+        {groupChats.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" /> Group Chats
+            </p>
+            <div className="space-y-1">
+              {groupChats.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => navigate(`/group/${g.id}`)}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/60 transition-colors text-left"
+                >
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-sm text-foreground block truncate">{g.name}</span>
+                    <p className="text-sm text-muted-foreground truncate">{g.last_message || `${g.member_ids?.length} members`}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Direct messages section label if both exist */}
+        {groupChats.length > 0 && conversations.length > 0 && (
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <MessageCircle className="h-3.5 w-3.5" /> Direct Messages
+          </p>
+        )}
+
+        {conversations.length === 0 && groupChats.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
               <MessageCircle className="h-8 w-8 text-muted-foreground" />
             </div>
             <h2 className="text-lg font-semibold mb-2">No messages yet</h2>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Start a conversation from someone's profile page.
+              Start a conversation from someone's profile, or create a group chat with your friends.
             </p>
           </div>
         ) : (
@@ -141,6 +196,18 @@ export default function Messages() {
           </div>
         )}
       </div>
+
+      {showNewGroup && (
+        <NewGroupChatDialog
+          currentUser={user}
+          onClose={() => setShowNewGroup(false)}
+          onCreate={(group) => {
+            setShowNewGroup(false);
+            queryClient.invalidateQueries({ queryKey: ["groupChats", user?.id] });
+            navigate(`/group/${group.id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

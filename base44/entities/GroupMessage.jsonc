@@ -1,0 +1,35 @@
+{
+  "name": "GroupMessage",
+  "type": "object",
+  "properties": {
+    "group_id": {
+      "type": "string"
+    },
+    "from_user_id": {
+      "type": "string"
+    },
+    "from_user_name": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "group_id",
+    "from_user_id",
+    "text"
+  ],
+  "rls": {
+    "create": {
+      "data.from_user_id": "{{user.id}}"
+    },
+    "read": {},
+    "update": {
+      "data.from_user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.from_user_id": "{{user.id}}"
+    }
+  }
+}

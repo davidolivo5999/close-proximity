@@ -26,6 +26,7 @@ import UserProfile from "@/pages/UserProfile";
 import Pro from "@/pages/Pro";
 import Messages from "@/pages/Messages";
 import Conversation from "@/pages/Conversation";
+import GroupConversation from "@/pages/GroupConversation";
 import Explore from "@/pages/Explore";
 import Support from "@/pages/Support";
 import Terms from "@/pages/Terms";
@@ -96,6 +97,7 @@ const AuthenticatedApp = () => {
           <Route path="/explore" element={<PageWrapper><Explore /></PageWrapper>} />
           <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
           <Route path="/messages/:peerId" element={<SlideWrapper><Conversation /></SlideWrapper>} />
+          <Route path="/group/:groupId" element={<SlideWrapper><GroupConversation /></SlideWrapper>} />
           <Route path="/user/:userId" element={<SlideWrapper><UserProfile /></SlideWrapper>} />
           <Route path="/support" element={<SlideWrapper><Support /></SlideWrapper>} />
           <Route path="/admin/reports" element={<SlideWrapper><AdminReports /></SlideWrapper>} />
