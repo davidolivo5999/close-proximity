@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import BottomNav from "./BottomNav";
 import { useTabHistory, TAB_ROOTS } from "@/lib/TabHistoryContext";
 import { isAuthenticated } from "@/lib/roleCheck";
+import { oneSignalService } from "@/lib/oneSignalService";
 
 function getTabRoot(pathname) {
   if (pathname === "/") return "/";
@@ -67,6 +68,14 @@ export default function AppLayout() {
     refetchOnWindowFocus: false,
     refetchInterval: false,
   });
+
+  // Register user with OneSignal when authenticated so push notifications are targeted by user ID
+  useEffect(() => {
+    if (!user?.id || user.id.startsWith('anon_')) return;
+    oneSignalService.init().then(() => {
+      oneSignalService.login(user.id).catch((e) => console.warn('OneSignal login:', e?.message));
+    });
+  }, [user?.id]);
 
   // Track the current path under each tab so we can restore it
   useEffect(() => {
