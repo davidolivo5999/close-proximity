@@ -77,6 +77,7 @@ export default function ReportButton({
           borderRadius: "1.5rem 1.5rem 0 0",
           boxShadow: "0 -8px 40px rgba(0,0,0,0.25)",
           overflow: "hidden",
+          marginBottom: "65px",
         }}
       >
         {/* Scrollable content */}
@@ -148,7 +149,7 @@ export default function ReportButton({
         </div>
 
         {/* Submit button — always visible */}
-        <div style={{ padding: "1rem 1.25rem", paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))", background: "#fff", borderTop: "1px solid #f3f4f6" }}>
+        <div style={{ padding: "1rem 1.25rem", paddingBottom: "1.25rem", background: "#fff", borderTop: "1px solid #f3f4f6" }}>
           <button
             onClick={handleSubmit}
             disabled={!reason || submitting}
