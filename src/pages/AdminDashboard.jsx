@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Users, UserPlus, MessageCircle, Flag, ShieldCheck, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users, Radio, MessageCircle, Flag, ShieldCheck, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 function getDayLabel(daysAgo) {
@@ -105,16 +105,16 @@ export default function AdminDashboard() {
     staleTime: 60 * 1000,
   });
 
-  const { data: recentRequests = [] } = useQuery({
-    queryKey: ["adminRecentRequests"],
-    queryFn: () => base44.entities.FriendRequest.filter({ created_date: { $gte: cutoff14 } }, "-created_date", 500),
+  const { data: recentEncounters = [] } = useQuery({
+    queryKey: ["adminRecentEncounters"],
+    queryFn: () => base44.entities.Encounter.filter({ created_date: { $gte: cutoff14 } }, "-created_date", 500),
     enabled: user?.role === "admin",
     staleTime: 60 * 1000,
   });
 
-  const { data: recentMessages = [] } = useQuery({
-    queryKey: ["adminRecentMessages"],
-    queryFn: () => base44.entities.DirectMessage.filter({ created_date: { $gte: cutoff14 } }, "-created_date", 500),
+  const { data: allEncounters = [] } = useQuery({
+    queryKey: ["adminAllEncounters"],
+    queryFn: () => base44.entities.Encounter.list("-created_date", 500),
     enabled: user?.role === "admin",
     staleTime: 60 * 1000,
   });
@@ -144,11 +144,12 @@ export default function AdminDashboard() {
 
   // 14-day charts
   const dauData = bucketByDay(recentLocations, "updated_date");
-  const requestsData = bucketByDay(recentRequests, "created_date");
+  const encountersData = bucketByDay(recentEncounters, "created_date");
 
   // Totals for stat cards
   const totalUsers = new Set(allLocations.map((l) => l.user_id)).size;
-  const requestsToday = recentRequests.filter((r) => new Date(r.created_date) >= new Date(today)).length;
+  const encounteredToday = recentEncounters.filter((r) => new Date(r.created_date) >= new Date(today)).length;
+  const totalEncounters = allEncounters.length;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#f2f2ed" }}>
@@ -188,15 +189,15 @@ export default function AdminDashboard() {
             color="bg-emerald-100"
           />
           <StatCard
-            icon={<UserPlus className="h-5 w-5 text-violet-600" />}
-            label="Requests today"
-            value={requestsToday}
+            icon={<Radio className="h-5 w-5 text-violet-600" />}
+            label="Encounters today"
+            value={encounteredToday}
             color="bg-violet-100"
           />
           <StatCard
             icon={<MessageCircle className="h-5 w-5 text-orange-500" />}
-            label="Messages (14d)"
-            value={recentMessages.length}
+            label="Total encounters"
+            value={totalEncounters}
             color="bg-orange-100"
           />
         </div>
@@ -204,8 +205,8 @@ export default function AdminDashboard() {
         {/* DAU chart */}
         <MiniChart data={dauData} color="#3b82f6" label="Daily Active Users" />
 
-        {/* Friend requests chart */}
-        <MiniChart data={requestsData} color="#8b5cf6" label="New Friend Requests" />
+        {/* Encounters chart */}
+        <MiniChart data={encountersData} color="#8b5cf6" label="Proximity Encounters" />
       </div>
     </div>
   );
