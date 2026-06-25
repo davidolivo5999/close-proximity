@@ -230,32 +230,44 @@ export default function Profile() {
 
   const handleLogout = () => base44.auth.logout("/");
 
+  const isDeletionScheduled = !!myLocation?.deletion_scheduled_at;
+  const deletionDate = myLocation?.deletion_scheduled_at
+    ? new Date(myLocation.deletion_scheduled_at)
+    : null;
+
+  const handleScheduleDelete = async () => {
+    if (!myLocation) return;
+    const scheduledAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await base44.entities.UserLocation.update(myLocation.id, { deletion_scheduled_at: scheduledAt });
+    queryClient.invalidateQueries({ queryKey: ["myLocation"] });
+    toast.success("Account deletion scheduled. You have 30 days to log back in and cancel.");
+    base44.auth.logout("/login");
+  };
+
+  const handleCancelDelete = async () => {
+    if (!myLocation) return;
+    await base44.entities.UserLocation.update(myLocation.id, { deletion_scheduled_at: null });
+    queryClient.invalidateQueries({ queryKey: ["myLocation"] });
+    toast.success("Account deletion cancelled. Your account is safe.");
+  };
+
   const handleDeleteProfile = async () => {
     try {
-      // Delete all user data in parallel where possible
       await Promise.all([
-        // Location / profile
         myLocation ? base44.entities.UserLocation.delete(myLocation.id) : Promise.resolve(),
-        // Friend requests (sent + received)
         base44.entities.FriendRequest.filter({ from_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.FriendRequest.delete(r.id)))),
         base44.entities.FriendRequest.filter({ to_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.FriendRequest.delete(r.id)))),
-        // Encounters (own + others who encountered this user)
         base44.entities.Encounter.filter({ user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Encounter.delete(r.id)))),
         base44.entities.Encounter.filter({ encountered_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Encounter.delete(r.id)))),
-        // Direct messages (sent + received)
         base44.entities.DirectMessage.filter({ from_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.DirectMessage.delete(r.id)))),
         base44.entities.DirectMessage.filter({ to_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.DirectMessage.delete(r.id)))),
-        // Blocks (initiated by or against this user)
         base44.entities.Block.filter({ blocker_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Block.delete(r.id)))),
         base44.entities.Block.filter({ blocked_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Block.delete(r.id)))),
-        // Photo likes
         base44.entities.PhotoLike.filter({ user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.PhotoLike.delete(r.id)))),
         base44.entities.PhotoLike.filter({ photo_owner_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.PhotoLike.delete(r.id)))),
-        // Media reactions
         base44.entities.MediaReaction.filter({ user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.MediaReaction.delete(r.id)))),
         base44.entities.MediaReaction.filter({ media_owner_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.MediaReaction.delete(r.id)))),
       ]);
-      // Delete the auth account last
       await base44.auth.deleteMe();
       toast.success("Account deleted. Signing you out...");
       setTimeout(() => base44.auth.logout("/login"), 1500);
@@ -698,31 +710,77 @@ export default function Profile() {
                 <ChevronRight className="h-4 w-4 text-gray-300" />
               </button>
               <div className="border-t border-gray-100" />
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button className="w-full flex items-center justify-between px-4 py-4 hover:bg-red-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <Trash2 className="h-5 w-5 text-red-400" />
-                      <span className="text-sm font-medium text-red-500">Delete Profile</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-gray-300" />
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete your profile?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will remove your location, photos, interests, and friend connections. This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteProfile} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                      Yes, delete my profile
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {isDeletionScheduled ? (
+                <>
+                  <div className="px-4 py-3 bg-red-50">
+                    <p className="text-xs font-semibold text-red-600 mb-0.5">⚠️ Account deletion scheduled</p>
+                    <p className="text-xs text-red-500">
+                      Your account will be permanently deleted on{" "}
+                      <strong>{deletionDate?.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</strong>{" "}
+                      if you don't log back in. All your data, photos, and friendships will be gone forever.
+                    </p>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="w-full flex items-center justify-between px-4 py-4 hover:bg-green-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <Shield className="h-5 w-5 text-green-500" />
+                          <span className="text-sm font-medium text-green-600">Cancel Account Deletion</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-gray-300" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel account deletion?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Your account will be kept and no data will be deleted. You can always request deletion again later.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Go back</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleCancelDelete}>
+                          Keep my account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="w-full flex items-center justify-between px-4 py-4 hover:bg-red-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Trash2 className="h-5 w-5 text-red-400" />
+                        <span className="text-sm font-medium text-red-500">Delete Account</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-gray-300" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure you want to delete your account?</AlertDialogTitle>
+                      <AlertDialogDescription asChild>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                          <p>Your account won't be deleted immediately. Here's what happens:</p>
+                          <ul className="list-disc pl-4 space-y-1">
+                            <li>Your profile will be hidden from other users right away.</li>
+                            <li>You have <strong>30 days</strong> to change your mind — just log back in to cancel.</li>
+                            <li>After 30 days without logging in, <strong>all your data will be permanently deleted</strong> — including photos, friendships, messages, and your account.</li>
+                          </ul>
+                          <p className="font-medium text-foreground">This cannot be undone after the 30-day window.</p>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep my account</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleScheduleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Schedule deletion
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           </>
         )}

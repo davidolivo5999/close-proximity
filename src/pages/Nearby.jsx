@@ -97,6 +97,8 @@ export default function Nearby() {
         latitude: location.latitude,
         longitude: location.longitude,
         is_visible: true,
+        // Cancel any pending deletion when user logs back in
+        ...(rec?.deletion_scheduled_at ? { deletion_scheduled_at: null } : {}),
       };
       try {
         if (rec) {

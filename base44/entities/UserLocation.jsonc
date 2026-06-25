@@ -83,6 +83,11 @@
         }
       },
       "description": "Areas where the user's location is hidden from others"
+    },
+    "deletion_scheduled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "If set, account is pending deletion after 30 days of no login"
     }
   },
   "required": [
