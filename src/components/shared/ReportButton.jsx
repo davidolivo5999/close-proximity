@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 const REASONS = ["Inappropriate", "Harassment", "Spam", "Nudity", "Hate Speech", "Other"];
 
+import { useQueryClient } from "@tanstack/react-query";
+
 export default function ReportButton({
   currentUser,
   reportedUserId,
@@ -19,6 +21,7 @@ export default function ReportButton({
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   if (currentUser && currentUser.id === reportedUserId) return null;
 
@@ -54,6 +57,11 @@ export default function ReportButton({
         ],
       });
       await Promise.all(friendships.map(f => base44.entities.FriendRequest.delete(f.id)));
+
+      // Invalidate caches so the user disappears from feeds immediately
+      queryClient.invalidateQueries({ queryKey: ["blocks"] });
+      queryClient.invalidateQueries({ queryKey: ["nearbyUsers"] });
+      queryClient.invalidateQueries({ queryKey: ["myRequests"] });
 
       toast.success("Report submitted. The user has been blocked and removed from your friends.");
       setOpen(false);
