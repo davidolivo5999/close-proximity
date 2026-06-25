@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, Star, Shield, Pencil, Check, Video, HelpCircle } from "lucide-react";
+import { LogOut, Save, Eye, EyeOff, Camera, X, Trash2, ChevronRight, Users, Star, Shield, Pencil, Check, Video, HelpCircle, Flag } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -626,6 +626,21 @@ export default function Profile() {
 
             {/* Account actions */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              {isAdmin(user) && (
+                <>
+                  <Link
+                    to="/admin/reports"
+                    className="w-full flex items-center justify-between px-4 py-4 hover:bg-orange-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Flag className="h-5 w-5 text-orange-400" />
+                      <span className="text-sm font-medium text-gray-800">Content Reports</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-300" />
+                  </Link>
+                  <div className="border-t border-gray-100" />
+                </>
+              )}
               <Link
                 to="/support"
                 className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors"
