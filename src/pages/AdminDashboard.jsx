@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Users, Radio, MessageCircle, Flag, ShieldCheck, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users, Radio, MessageCircle, Flag, ShieldCheck, TrendingUp, Trophy } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import EncounterHeatMap from "@/components/admin/EncounterHeatMap";
 
@@ -127,6 +127,27 @@ export default function AdminDashboard() {
     staleTime: 30 * 1000,
   });
 
+  // Weekly leaderboard — top 10 users by encounter count this week
+  const weekCutoff = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString();
+  }, []);
+
+  const weeklyLeaderboard = useMemo(() => {
+    const counts = {};
+    allEncounters.forEach((enc) => {
+      if (new Date(enc.created_date) < new Date(weekCutoff)) return;
+      counts[enc.user_id] = (counts[enc.user_id] || 0) + 1;
+    });
+    const locationNameMap = {};
+    allLocations.forEach((l) => { locationNameMap[l.user_id] = l.user_name; });
+    return Object.entries(counts)
+      .map(([userId, count]) => ({ userId, name: locationNameMap[userId] || "Unknown", count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }, [allEncounters, allLocations, weekCutoff]);
+
   if (user && user.role !== "admin") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-5 text-center">
@@ -217,6 +238,43 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Weekly Leaderboard */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="h-4 w-4 text-amber-500" />
+            <p className="text-sm font-bold text-gray-900">Most Active This Week</p>
+          </div>
+          {weeklyLeaderboard.length === 0 ? (
+            <p className="text-xs text-gray-400 text-center py-4">No encounters recorded this week yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {weeklyLeaderboard.map((entry, i) => {
+                const medalColors = ["text-amber-400", "text-gray-400", "text-orange-400"];
+                const bgColors = ["bg-amber-50", "bg-gray-50", "bg-orange-50"];
+                const isMedal = i < 3;
+                return (
+                  <div
+                    key={entry.userId}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2 ${isMedal ? bgColors[i] : "bg-gray-50"}`}
+                  >
+                    <span className={`w-5 text-center text-sm font-bold ${isMedal ? medalColors[i] : "text-gray-400"}`}>
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{entry.name}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Radio className="h-3 w-3 text-violet-500" />
+                      <span className="text-sm font-bold text-violet-600">{entry.count}</span>
+                      <span className="text-xs text-gray-400 ml-0.5">enc.</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* DAU chart */}
