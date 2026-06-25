@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,15 +10,9 @@ import AuthLayout from "@/components/AuthLayout";
 import { toast } from "@/components/ui/use-toast";
 
 export default function Register() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    if (!localStorage.getItem("terms_agreed")) {
-      navigate("/terms?next=/register", { replace: true });
-    }
-  }, []);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -196,7 +190,22 @@ export default function Register() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <div className="flex items-start gap-2 pt-1">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={agreedToTerms}
+            onChange={e => setAgreedToTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded accent-orange-500 cursor-pointer flex-shrink-0"
+          />
+          <label htmlFor="terms" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+            I agree to the{" "}
+            <Link to="/terms" className="text-primary font-medium hover:underline">
+              Terms of Use
+            </Link>
+          </label>
+        </div>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading || !agreedToTerms}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
