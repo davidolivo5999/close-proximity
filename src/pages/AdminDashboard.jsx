@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { ArrowLeft, Users, Radio, MessageCircle, Flag, ShieldCheck, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import EncounterHeatMap from "@/components/admin/EncounterHeatMap";
 
 function getDayLabel(daysAgo) {
   const d = new Date();
@@ -200,6 +201,22 @@ export default function AdminDashboard() {
             value={totalEncounters}
             color="bg-orange-100"
           />
+        </div>
+
+        {/* Social Hubs map */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <p className="text-sm font-bold text-gray-900 mb-1">Social Hubs</p>
+          <p className="text-xs text-gray-400 mb-3">Where encounters happen most — larger = more activity</p>
+          <EncounterHeatMap encounters={allEncounters} />
+          {/* Legend */}
+          <div className="flex items-center gap-4 mt-3 justify-center">
+            {[["#6366f1", "Low"], ["#a855f7", "Medium"], ["#f97316", "High"]].map(([color, label]) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+                <span className="text-xs text-gray-500">{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* DAU chart */}
