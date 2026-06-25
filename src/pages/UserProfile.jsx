@@ -9,6 +9,7 @@ import PhotoGridLightbox from "@/components/profile/PhotoGridLightbox";
 import PhotoFeedCard from "@/components/explore/PhotoFeedCard";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
 import UserAvatar from "@/components/shared/UserAvatar";
+import MutualFriends from "@/components/profile/MutualFriends";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -234,6 +235,9 @@ export default function UserProfile() {
                 ))}
               </div>
             )}
+
+            {/* Mutual Friends */}
+            <MutualFriends currentUserId={currentUser?.id} profileUserId={userId} />
 
             {!locationData.bio && !locationData.interests?.length && !locationData.photos?.length && !locationData.videos?.length && (
               <div className="flex flex-col items-center py-16 text-center">
