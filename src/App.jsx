@@ -28,6 +28,7 @@ import Messages from "@/pages/Messages";
 import Conversation from "@/pages/Conversation";
 import Explore from "@/pages/Explore";
 import Support from "@/pages/Support";
+import Terms from "@/pages/Terms";
 
 // Fade transition for tab switches
 const PageWrapper = ({ children }) => (
@@ -77,6 +78,7 @@ const AuthenticatedApp = () => {
   return (
     <AnimatePresence mode="wait" initial={false}>
       <Routes location={routerLocation} key={routerLocation.pathname}>
+        <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

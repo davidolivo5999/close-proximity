@@ -1,0 +1,78 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "reporter_id": {
+      "type": "string",
+      "description": "User ID of the reporter"
+    },
+    "reporter_email": {
+      "type": "string"
+    },
+    "reported_user_id": {
+      "type": "string",
+      "description": "User ID being reported"
+    },
+    "reported_user_name": {
+      "type": "string"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "profile",
+        "photo",
+        "video",
+        "message"
+      ],
+      "description": "Type of content being reported"
+    },
+    "content_url": {
+      "type": "string",
+      "description": "URL of the reported photo/video if applicable"
+    },
+    "content_preview": {
+      "type": "string",
+      "description": "Short text preview for messages"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "Inappropriate",
+        "Harassment",
+        "Spam",
+        "Nudity",
+        "Hate Speech",
+        "Other"
+      ]
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional additional details from reporter"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "reviewed",
+        "dismissed"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "reporter_id",
+    "reported_user_id",
+    "content_type",
+    "reason"
+  ],
+  "rls": {
+    "create": {
+      "data.reporter_id": "{{user.id}}"
+    },
+    "read": {
+      "data.reporter_id": "{{user.id}}"
+    },
+    "update": {},
+    "delete": {}
+  }
+}

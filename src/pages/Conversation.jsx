@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { ArrowLeft, Send, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/shared/UserAvatar";
+import ReportButton from "@/components/shared/ReportButton";
 import { format } from "date-fns";
 
 export default function Conversation() {
@@ -148,7 +149,14 @@ export default function Conversation() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <UserAvatar name={peerName} size="sm" colorIndex={peerId.charCodeAt(0)} avatarUrl={peerAvatarUrl} />
-        <span className="font-semibold text-foreground">{peerName}</span>
+        <span className="font-semibold text-foreground flex-1">{peerName}</span>
+        <ReportButton
+          currentUser={user}
+          reportedUserId={peerId}
+          reportedUserName={peerName}
+          contentType="message"
+          iconOnly
+        />
       </div>
 
       {/* Messages */}

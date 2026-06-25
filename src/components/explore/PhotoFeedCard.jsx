@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Heart, MessageCircle, X, SmilePlus } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
+import ReportButton from "@/components/shared/ReportButton";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -109,6 +110,7 @@ export default function PhotoFeedCard({ photo, owner, currentUser, darkMode = fa
     <div className={`${cardBg} border-b ${borderColor}`} style={bg ? { backgroundColor: bg } : {}}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between w-full">
         <button
           className="flex items-center gap-2.5"
           onClick={() => navigate(`/user/${owner.user_id}`, { state: { from: "/explore", userName: owner.user_name } })}
@@ -126,6 +128,15 @@ export default function PhotoFeedCard({ photo, owner, currentUser, darkMode = fa
             </p>
           </div>
         </button>
+        <ReportButton
+          currentUser={currentUser}
+          reportedUserId={owner.user_id}
+          reportedUserName={owner.user_name}
+          contentType="photo"
+          contentUrl={photo}
+          iconOnly
+        />
+        </div>
       </div>
 
       {/* Photo */}

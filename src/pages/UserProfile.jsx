@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { MapPin, ArrowLeft, ShieldOff, MessageCircle } from "lucide-react";
+import ReportButton from "@/components/shared/ReportButton";
 import PhotoGridLightbox from "@/components/profile/PhotoGridLightbox";
 import PhotoFeedCard from "@/components/explore/PhotoFeedCard";
 import { PROFILE_THEMES } from "@/components/profile/ProfileThemePicker";
@@ -120,6 +121,15 @@ export default function UserProfile() {
           >
             <MessageCircle className="h-4 w-4" /> Message
           </Button>
+          <div className="flex items-center justify-center h-11 w-12 flex-shrink-0 rounded-2xl" style={{ backgroundColor: "#1e1e24", border: "1px solid #2a2a33" }}>
+            <ReportButton
+              currentUser={canInteract ? currentUser : null}
+              reportedUserId={userId}
+              reportedUserName={userName}
+              contentType="profile"
+              iconOnly
+            />
+          </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
