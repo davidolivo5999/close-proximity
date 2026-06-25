@@ -55,10 +55,6 @@ export default function ReportButton({
         position: "fixed",
         inset: 0,
         zIndex: 99999,
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "center",
-        paddingBottom: "calc(65px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       {/* Backdrop */}
@@ -67,13 +63,16 @@ export default function ReportButton({
         onClick={() => setOpen(false)}
       />
 
-      {/* Sheet */}
+      {/* Sheet — anchored above the nav bar */}
       <div
         style={{
-          position: "relative",
+          position: "absolute",
+          bottom: "calc(65px + env(safe-area-inset-bottom, 0px))",
+          left: 0,
+          right: 0,
           zIndex: 1,
-          width: "100%",
           maxWidth: 480,
+          margin: "0 auto",
           background: "#fff",
           borderRadius: "1.5rem 1.5rem 0 0",
           boxShadow: "0 -8px 40px rgba(0,0,0,0.25)",
