@@ -67,7 +67,7 @@ export default function ReportButton({
       <div
         style={{
           position: "absolute",
-          top: "env(safe-area-inset-top, 0px)",
+          top: 0,
           left: 0,
           right: 0,
           zIndex: 1,
