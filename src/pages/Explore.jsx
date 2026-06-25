@@ -2,7 +2,8 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Clock, Repeat2, Globe, Heart, Video, Images } from "lucide-react";
+import { Compass, Clock, Repeat2, Globe, Heart, Video, Images, MapPin } from "lucide-react";
+import EncounterMap from "@/components/explore/EncounterMap";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -215,6 +216,17 @@ export default function Explore() {
 
         {!isLoading && tab === "encountered" && (
           <>
+            {/* Meeting history map */}
+            {sortedEncounters.some(e => (e.meet_locations || []).length > 0) && (
+              <div className="px-5 pt-4 pb-2">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Where you've crossed paths</p>
+                </div>
+                <EncounterMap encounters={sortedEncounters} />
+              </div>
+            )}
+
             {sortedEncounters.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -251,6 +263,12 @@ export default function Explore() {
                           <span className="flex items-center gap-1 text-xs text-primary font-medium">
                             <Repeat2 className="h-3 w-3" />
                             {enc.times_seen}x nearby
+                          </span>
+                        )}
+                        {(enc.meet_locations || []).length > 0 && (
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {enc.meet_locations.length} {enc.meet_locations.length === 1 ? "spot" : "spots"}
                           </span>
                         )}
                       </>

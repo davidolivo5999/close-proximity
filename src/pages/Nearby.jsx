@@ -311,14 +311,21 @@ export default function Nearby() {
         encountered_user_id: nu.user_id,
       });
 
+      const nowIso = new Date().toISOString();
+      const meetPoint = { latitude: location.latitude, longitude: location.longitude, timestamp: nowIso };
+
       if (existing.length > 0) {
+        const prevLocations = existing[0].meet_locations || [];
+        // Keep last 50 meeting locations to cap record size
+        const updatedLocations = [...prevLocations, meetPoint].slice(-50);
         base44.entities.Encounter.update(existing[0].id, {
-          last_seen_at: new Date().toISOString(),
+          last_seen_at: nowIso,
           times_seen: (existing[0].times_seen || 1) + 1,
           encountered_user_name: nu.user_name,
           encountered_avatar_url: nu.avatar_url || null,
           encountered_bio: nu.bio || null,
           encountered_interests: nu.interests || [],
+          meet_locations: updatedLocations,
         }).catch(() => {});
       } else {
         base44.entities.Encounter.create({
@@ -328,8 +335,9 @@ export default function Nearby() {
           encountered_avatar_url: nu.avatar_url || null,
           encountered_bio: nu.bio || null,
           encountered_interests: nu.interests || [],
-          last_seen_at: new Date().toISOString(),
+          last_seen_at: nowIso,
           times_seen: 1,
+          meet_locations: [meetPoint],
         }).catch(() => {});
       }
     });

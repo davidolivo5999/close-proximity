@@ -34,6 +34,25 @@
       "type": "number",
       "default": 1,
       "description": "How many times this person has been nearby"
+    },
+    "meet_locations": {
+      "type": "array",
+      "description": "History of locations where this encounter occurred",
+      "items": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
     }
   },
   "required": [
