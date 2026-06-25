@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { Flag, X, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
@@ -48,6 +49,135 @@ export default function ReportButton({
     }
   };
 
+  const modal = open ? createPortal(
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 99999,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+      }}
+    >
+      {/* Backdrop */}
+      <div
+        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Sheet */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "100%",
+          maxWidth: 480,
+          background: "#fff",
+          borderRadius: "1.5rem 1.5rem 0 0",
+          boxShadow: "0 -8px 40px rgba(0,0,0,0.25)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Scrollable content */}
+        <div style={{ overflowY: "auto", maxHeight: "60vh", padding: "1.25rem 1.25rem 0" }}>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <div style={{ width: 32, height: 32, borderRadius: "0.75rem", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Flag style={{ width: 16, height: 16, color: "#ef4444" }} />
+              </div>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 14, color: "#111" }}>Report {contentType}</p>
+                {reportedUserName && <p style={{ fontSize: 12, color: "#9ca3af" }}>{reportedUserName}</p>}
+              </div>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              style={{ width: 32, height: 32, borderRadius: "50%", background: "#f3f4f6", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <X style={{ width: 16, height: 16, color: "#6b7280" }} />
+            </button>
+          </div>
+
+          {/* Reason label */}
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: "0.5rem" }}>Why are you reporting this?</p>
+
+          {/* Reason pills */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+            {REASONS.map(r => (
+              <button
+                key={r}
+                onClick={() => setReason(r)}
+                style={{
+                  padding: "0.375rem 0.875rem",
+                  borderRadius: "9999px",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  border: reason === r ? "2px solid #fb923c" : "2px solid #e5e7eb",
+                  background: reason === r ? "#fff7ed" : "#fff",
+                  color: reason === r ? "#c2410c" : "#4b5563",
+                  cursor: "pointer",
+                }}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+
+          {/* Notes */}
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Additional details (optional)..."
+            rows={2}
+            maxLength={300}
+            style={{
+              width: "100%",
+              borderRadius: "0.75rem",
+              border: "1px solid #e5e7eb",
+              background: "#f9fafb",
+              padding: "0.5rem 0.75rem",
+              fontSize: 14,
+              color: "#1f2937",
+              resize: "none",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Submit button — always visible */}
+        <div style={{ padding: "1rem 1.25rem", paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))", background: "#fff", borderTop: "1px solid #f3f4f6" }}>
+          <button
+            onClick={handleSubmit}
+            disabled={!reason || submitting}
+            style={{
+              width: "100%",
+              height: 48,
+              borderRadius: "1rem",
+              fontWeight: 600,
+              color: "#fff",
+              fontSize: 14,
+              border: "none",
+              background: "linear-gradient(135deg, #f97316, #ec4899)",
+              opacity: (!reason || submitting) ? 0.4 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              cursor: (!reason || submitting) ? "not-allowed" : "pointer",
+            }}
+          >
+            {submitting ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <Flag style={{ width: 16, height: 16 }} />}
+            Submit Report
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   return (
     <>
       {iconOnly ? (
@@ -68,75 +198,7 @@ export default function ReportButton({
         </button>
       )}
 
-      {open && (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
-
-          {/* Sheet */}
-          <div className="relative z-10 w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden">
-            <div className="overflow-y-auto" style={{ maxHeight: "70vh" }}>
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-xl bg-red-100 flex items-center justify-center">
-                      <Flag className="h-4 w-4 text-red-500" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-sm">Report {contentType}</p>
-                      {reportedUserName && (
-                        <p className="text-xs text-gray-400">{reportedUserName}</p>
-                      )}
-                    </div>
-                  </div>
-                  <button onClick={() => setOpen(false)} className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <X className="h-4 w-4 text-gray-500" />
-                  </button>
-                </div>
-
-                <p className="text-sm font-semibold text-gray-700 mb-2">Why are you reporting this?</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {REASONS.map(r => (
-                    <button
-                      key={r}
-                      onClick={() => setReason(r)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-all ${
-                        reason === r
-                          ? "border-orange-400 bg-orange-50 text-orange-700"
-                          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
-
-                <textarea
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder="Additional details (optional)..."
-                  rows={2}
-                  maxLength={300}
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-orange-300 mb-4"
-                />
-              </div>
-            </div>
-
-            {/* Submit button pinned at bottom, above safe area */}
-            <div className="px-5 pb-5 pt-2 bg-white border-t border-gray-100" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}>
-              <button
-                onClick={handleSubmit}
-                disabled={!reason || submitting}
-                className="w-full h-12 rounded-2xl font-semibold text-white text-sm disabled:opacity-40 transition-opacity flex items-center justify-center gap-2"
-                style={{ background: "linear-gradient(135deg, #f97316, #ec4899)" }}
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Flag className="h-4 w-4" />}
-                Submit Report
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {modal}
     </>
   );
 }
