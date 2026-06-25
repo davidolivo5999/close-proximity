@@ -31,10 +31,10 @@ export default function ReportButton({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  if (!currentUser || currentUser.id === reportedUserId) return null;
+  if (currentUser && currentUser.id === reportedUserId) return null;
 
   const handleSubmit = async () => {
-    if (!reason) return;
+    if (!reason || !currentUser) return;
     setSubmitting(true);
     try {
       await base44.entities.Report.create({

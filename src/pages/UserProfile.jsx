@@ -39,11 +39,12 @@ export default function UserProfile() {
   const backTo = location.state?.from || "/";
   const backTab = location.state?.from || "/";
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: isLoadingUser } = useQuery({
     queryKey: ["currentUser"],
     queryFn: () => base44.auth.me(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: false,
   });
 
   const { data: locationData, isLoading } = useQuery({
@@ -73,7 +74,7 @@ export default function UserProfile() {
   };
 
   const userName = locationData?.user_name || location.state?.userName || "VibeCheck User";
-  const canInteract = currentUser && currentUser.id !== userId;
+  const canInteract = !isLoadingUser && currentUser && currentUser.id !== userId;
 
   return (
     <div className="min-h-full" style={{ backgroundColor: "#111114" }}>
