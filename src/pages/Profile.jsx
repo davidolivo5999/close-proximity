@@ -231,13 +231,37 @@ export default function Profile() {
   const handleLogout = () => base44.auth.logout("/");
 
   const handleDeleteProfile = async () => {
-    if (myLocation) await base44.entities.UserLocation.delete(myLocation.id);
-    const sent = await base44.entities.FriendRequest.filter({ from_user_id: user.id });
-    const received = await base44.entities.FriendRequest.filter({ to_user_id: user.id });
-    for (const r of [...sent, ...received]) await base44.entities.FriendRequest.delete(r.id);
-    await base44.auth.deleteMe();
-    toast.success("Account deleted. Signing you out...");
-    setTimeout(() => base44.auth.logout("/login"), 1500);
+    try {
+      // Delete all user data in parallel where possible
+      await Promise.all([
+        // Location / profile
+        myLocation ? base44.entities.UserLocation.delete(myLocation.id) : Promise.resolve(),
+        // Friend requests (sent + received)
+        base44.entities.FriendRequest.filter({ from_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.FriendRequest.delete(r.id)))),
+        base44.entities.FriendRequest.filter({ to_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.FriendRequest.delete(r.id)))),
+        // Encounters (own + others who encountered this user)
+        base44.entities.Encounter.filter({ user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Encounter.delete(r.id)))),
+        base44.entities.Encounter.filter({ encountered_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Encounter.delete(r.id)))),
+        // Direct messages (sent + received)
+        base44.entities.DirectMessage.filter({ from_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.DirectMessage.delete(r.id)))),
+        base44.entities.DirectMessage.filter({ to_user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.DirectMessage.delete(r.id)))),
+        // Blocks (initiated by or against this user)
+        base44.entities.Block.filter({ blocker_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Block.delete(r.id)))),
+        base44.entities.Block.filter({ blocked_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.Block.delete(r.id)))),
+        // Photo likes
+        base44.entities.PhotoLike.filter({ user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.PhotoLike.delete(r.id)))),
+        base44.entities.PhotoLike.filter({ photo_owner_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.PhotoLike.delete(r.id)))),
+        // Media reactions
+        base44.entities.MediaReaction.filter({ user_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.MediaReaction.delete(r.id)))),
+        base44.entities.MediaReaction.filter({ media_owner_id: user.id }).then(rs => Promise.all(rs.map(r => base44.entities.MediaReaction.delete(r.id)))),
+      ]);
+      // Delete the auth account last
+      await base44.auth.deleteMe();
+      toast.success("Account deleted. Signing you out...");
+      setTimeout(() => base44.auth.logout("/login"), 1500);
+    } catch (err) {
+      toast.error("Failed to delete account. Please try again.");
+    }
   };
 
   const tabs = [
