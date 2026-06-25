@@ -58,6 +58,7 @@ export default function ReportButton({
         display: "flex",
         alignItems: "flex-end",
         justifyContent: "center",
+        paddingBottom: "calc(65px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       {/* Backdrop */}
@@ -77,7 +78,6 @@ export default function ReportButton({
           borderRadius: "1.5rem 1.5rem 0 0",
           boxShadow: "0 -8px 40px rgba(0,0,0,0.25)",
           overflow: "hidden",
-          marginBottom: "65px",
         }}
       >
         {/* Scrollable content */}
