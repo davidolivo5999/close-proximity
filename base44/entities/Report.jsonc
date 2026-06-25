@@ -70,9 +70,26 @@
       "data.reporter_id": "{{user.id}}"
     },
     "read": {
-      "data.reporter_id": "{{user.id}}"
+      "$or": [
+        {
+          "data.reporter_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
-    "update": {},
-    "delete": {}
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
   }
 }
