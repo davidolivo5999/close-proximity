@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import PhotoFeedCard from "@/components/explore/PhotoFeedCard";
+import CheckInButton from "@/components/explore/CheckInButton";
 
 function UserCard({ name, userId, avatarUrl, bio, interests, meta, index, onClick, photos, videos, likeCounts }) {
   // Sort photos by like count desc, then show up to 3
@@ -216,9 +217,20 @@ export default function Explore() {
 
         {!isLoading && tab === "encountered" && (
           <>
+            {/* Check In button */}
+            {user && (
+              <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Mark this spot</p>
+                  <p className="text-xs text-muted-foreground">Save your current location to your path history</p>
+                </div>
+                <CheckInButton userId={user.id} encounters={sortedEncounters} />
+              </div>
+            )}
+
             {/* Meeting history map */}
             {sortedEncounters.some(e => (e.meet_locations || []).length > 0) && (
-              <div className="px-5 pt-4 pb-2">
+              <div className="px-5 pt-2 pb-2">
                 <div className="flex items-center gap-1.5 mb-2">
                   <MapPin className="h-3.5 w-3.5 text-primary" />
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Where you've crossed paths</p>
