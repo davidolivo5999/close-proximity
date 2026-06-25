@@ -15,7 +15,7 @@ export default function Terms() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f2f2ed" }}>
+    <div className="fixed inset-0 flex flex-col" style={{ backgroundColor: "#f2f2ed" }}>
       {/* Header */}
       <div className="px-5 pt-10 pb-6 text-center">
         <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
