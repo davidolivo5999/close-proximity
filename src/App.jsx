@@ -58,7 +58,7 @@ const SlideWrapper = ({ children }) => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
   const routerLocation = useLocation();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -73,8 +73,7 @@ const AuthenticatedApp = () => {
     if (authError.type === "user_not_registered") {
       return <UserNotRegisteredError />;
     } else if (authError.type === "auth_required") {
-      navigateToLogin();
-      return null;
+      // Don't redirect — fall through to show Landing/login routes below
     }
   }
 
@@ -88,7 +87,7 @@ const AuthenticatedApp = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route element={<AppLayout />}>
-          <Route path="/" element={<PageWrapper><Nearby /></PageWrapper>} />
+          <Route path="/" element={isAuthenticated ? <PageWrapper><Nearby /></PageWrapper> : <Landing />} />
           <Route path="/friends" element={<PageWrapper><Friends /></PageWrapper>} />
           <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
           <Route path="/requests" element={<PageWrapper><Requests /></PageWrapper>} />
