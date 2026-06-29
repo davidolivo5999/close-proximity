@@ -51,7 +51,7 @@ export default function Landing() {
             </Link>
             <Link to="/register">
               <Button size="sm" className="rounded-full">
-                Get Started
+                Create Account
               </Button>
             </Link>
           </div>
