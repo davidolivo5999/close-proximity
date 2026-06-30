@@ -15,6 +15,7 @@ import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Landing from "@/pages/Landing";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 
 
 import AppLayout from "@/components/shared/AppLayout";
@@ -83,6 +84,7 @@ const AuthenticatedApp = () => {
       <Routes location={routerLocation} key={routerLocation.pathname}>
         <Route path="/landing" element={<Landing />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
