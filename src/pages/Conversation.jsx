@@ -17,6 +17,25 @@ export default function Conversation() {
   const [text, setText] = useState("");
 
   const peerNameFromState = routerLocation.state?.peerName;
+
+  // Redirect away if this peer is blocked (either direction)
+  const { data: isBlocked } = useQuery({
+    queryKey: ["isBlocked", user?.id, peerId],
+    queryFn: async () => {
+      const [blocked, blockedBy] = await Promise.all([
+        base44.entities.Block.filter({ blocker_id: user.id, blocked_id: peerId }),
+        base44.entities.Block.filter({ blocker_id: peerId, blocked_id: user.id }),
+      ]);
+      return blocked.length > 0 || blockedBy.length > 0;
+    },
+    enabled: !!user?.id && !!peerId,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (isBlocked) navigate("/messages", { replace: true });
+  }, [isBlocked, navigate]);
   const peerAvatarUrlFromState = routerLocation.state?.peerAvatarUrl;
 
   const { data: user } = useQuery({

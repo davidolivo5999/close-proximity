@@ -72,8 +72,10 @@ export default function Messages() {
         });
       }
     }
-    return Array.from(map.values()).sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
-  }, [sent, received, user]);
+    return Array.from(map.values())
+      .filter((c) => !myBlocks.includes(c.peerId))
+      .sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
+  }, [sent, received, user, myBlocks]);
 
   const peerIds = conversations.map((c) => c.peerId);
   const { data: allLocations = [] } = useQuery({
@@ -99,6 +101,20 @@ export default function Messages() {
     }
     return map;
   }, [allLocations, peerIds]);
+
+  const { data: myBlocks = [] } = useQuery({
+    queryKey: ["blocks", user?.id],
+    queryFn: async () => {
+      const [blocked, blockedBy] = await Promise.all([
+        base44.entities.Block.filter({ blocker_id: user.id }),
+        base44.entities.Block.filter({ blocked_id: user.id }),
+      ]);
+      return [...blocked.map((b) => b.blocked_id), ...blockedBy.map((b) => b.blocker_id)];
+    },
+    enabled: !!user?.id,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
   const { data: groupChats = [] } = useQuery({
     queryKey: ["groupChats", user?.id],
