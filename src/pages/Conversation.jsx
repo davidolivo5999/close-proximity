@@ -17,6 +17,14 @@ export default function Conversation() {
   const [text, setText] = useState("");
 
   const peerNameFromState = routerLocation.state?.peerName;
+  const peerAvatarUrlFromState = routerLocation.state?.peerAvatarUrl;
+
+  const { data: user } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () => base44.auth.me(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
   // Redirect away if this peer is blocked (either direction)
   const { data: isBlocked } = useQuery({
@@ -36,14 +44,6 @@ export default function Conversation() {
   useEffect(() => {
     if (isBlocked) navigate("/messages", { replace: true });
   }, [isBlocked, navigate]);
-  const peerAvatarUrlFromState = routerLocation.state?.peerAvatarUrl;
-
-  const { data: user } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
 
   // Fetch current user's location for display name
   const { data: myLocation } = useQuery({
