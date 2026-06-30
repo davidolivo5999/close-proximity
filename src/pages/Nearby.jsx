@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radar, MapPinOff, RefreshCw, Plus, Map, List, ShieldCheck } from "lucide-react";
+import { Radar, MapPinOff, RefreshCw, Plus, Map, List, ShieldCheck, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,9 @@ export default function Nearby() {
   const [activeInterest, setActiveInterest] = useState(null);
   const [hangoutsView, setHangoutsView] = useState("list");
   const [peopleView, setPeopleView] = useState("list");
+  const [checkedIn, setCheckedIn] = useState(() => localStorage.getItem("proximity_checked_in") === "true");
+  const [showSharingDialog, setShowSharingDialog] = useState(false);
+  const sharingDialogShownRef = useRef(false);
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -79,33 +83,44 @@ export default function Nearby() {
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user; }, [user]);
 
-  // Broadcast own location — add debounce to avoid multiple updates (only for authenticated users)
+  // Show location sharing dialog once after location is first obtained
+  useEffect(() => {
+    if (!location || sharingDialogShownRef.current) return;
+    const alreadyAsked = localStorage.getItem("proximity_sharing_asked") === "true";
+    if (!alreadyAsked) {
+      sharingDialogShownRef.current = true;
+      setShowSharingDialog(true);
+    }
+  }, [location]);
+
+  // Broadcast own location — only when checked in (only for authenticated users)
   useEffect(() => {
     const user = userRef.current;
     if (!user?.id || !isAuthenticated(user)) return;
 
-    if (!location) {
-      const rec = myLocationRecordRef.current;
-      if (insideZone && rec) {
+    const rec = myLocationRecordRef.current;
+
+    // If not checked in, or inside a privacy zone, ensure is_visible=false
+    if (!checkedIn || insideZone || !location) {
+      if (rec) {
         base44.entities.UserLocation.update(rec.id, { is_visible: false }).catch(() => {});
       }
       return;
     }
 
     const timeout = setTimeout(async () => {
-      const rec = myLocationRecordRef.current;
+      const currentRec = myLocationRecordRef.current;
       const data = {
         user_id: user.id,
-        user_name: rec?.user_name || user.full_name || "",
+        user_name: currentRec?.user_name || user.full_name || "",
         latitude: location.latitude,
         longitude: location.longitude,
         is_visible: true,
-        // Cancel any pending deletion when user logs back in
-        ...(rec?.deletion_scheduled_at ? { deletion_scheduled_at: null } : {}),
+        ...(currentRec?.deletion_scheduled_at ? { deletion_scheduled_at: null } : {}),
       };
       try {
-        if (rec) {
-          await base44.entities.UserLocation.update(rec.id, data);
+        if (currentRec) {
+          await base44.entities.UserLocation.update(currentRec.id, data);
         } else {
           await base44.entities.UserLocation.create(data);
           queryClient.invalidateQueries({ queryKey: ["myLocation", user.id] });
@@ -117,8 +132,22 @@ export default function Nearby() {
     }, 500);
 
     return () => clearTimeout(timeout);
-  // Only re-broadcast when coords or zone actually change — NOT on object refetch
-  }, [location?.latitude, location?.longitude, insideZone]);
+  }, [location?.latitude, location?.longitude, insideZone, checkedIn]);
+
+  const handleCheckIn = () => {
+    setCheckedIn(true);
+    localStorage.setItem("proximity_checked_in", "true");
+    toast.success("You're now visible to nearby users 📍");
+  };
+
+  const handleCheckOut = () => {
+    setCheckedIn(false);
+    localStorage.setItem("proximity_checked_in", "false");
+    // Immediately hide from others
+    const rec = myLocationRecordRef.current;
+    if (rec) base44.entities.UserLocation.update(rec.id, { is_visible: false }).catch(() => {});
+    toast("You're now hidden from nearby users.");
+  };
 
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
     queryKey: ["nearbyUsers"],
@@ -404,6 +433,26 @@ export default function Nearby() {
               <Plus className="h-3.5 w-3.5" /> Hangout
             </Button>
           )}
+          {isAuthenticated(user) && location && (
+            checkedIn && !insideZone ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full gap-1.5 px-3 border-emerald-400 text-emerald-600 hover:bg-emerald-50"
+                onClick={handleCheckOut}
+              >
+                <MapPin className="h-3.5 w-3.5" /> Checked In
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="rounded-full gap-1.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white"
+                onClick={handleCheckIn}
+              >
+                <MapPin className="h-3.5 w-3.5" /> Check In
+              </Button>
+            )
+          )}
           <Button
             variant="outline"
             size="icon"
@@ -595,6 +644,40 @@ export default function Nearby() {
               </section>
             </div>
           )}
+
+          {/* Location sharing opt-in dialog */}
+          <Dialog open={showSharingDialog} onOpenChange={setShowSharingDialog}>
+            <DialogContent className="max-w-sm rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-semibold">Share your location?</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground mt-1">
+                  Share your location with nearby users? You can check in anytime to become visible, and check out to go hidden.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-2 mt-2">
+                <Button
+                  className="w-full rounded-xl"
+                  onClick={() => {
+                    localStorage.setItem("proximity_sharing_asked", "true");
+                    setShowSharingDialog(false);
+                    handleCheckIn();
+                  }}
+                >
+                  <MapPin className="h-4 w-4 mr-2" /> Enable Location Sharing
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full rounded-xl"
+                  onClick={() => {
+                    localStorage.setItem("proximity_sharing_asked", "true");
+                    setShowSharingDialog(false);
+                  }}
+                >
+                  Not Now
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <CreateHangoutDialog
             open={showCreateHangout}
