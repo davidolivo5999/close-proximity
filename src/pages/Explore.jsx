@@ -108,6 +108,20 @@ export default function Explore() {
     refetchOnWindowFocus: false,
   });
 
+  const { data: myBlocks = [] } = useQuery({
+    queryKey: ["blocks", user?.id],
+    queryFn: async () => {
+      const [blocked, blockedBy] = await Promise.all([
+        base44.entities.Block.filter({ blocker_id: user.id }),
+        base44.entities.Block.filter({ blocked_id: user.id }),
+      ]);
+      return [...blocked.map((b) => b.blocked_id), ...blockedBy.map((b) => b.blocker_id)];
+    },
+    enabled: !!user?.id,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   // Build a map of photo_url -> like count
   const globalLikeCounts = useMemo(() =>
     allLikes.reduce((acc, l) => {
@@ -118,8 +132,10 @@ export default function Explore() {
   );
 
   const sortedEncounters = useMemo(() =>
-    [...encounters].sort((a, b) => new Date(b.last_seen_at) - new Date(a.last_seen_at)),
-    [encounters]
+    [...encounters]
+      .filter((e) => !myBlocks.includes(e.encountered_user_id))
+      .sort((a, b) => new Date(b.last_seen_at) - new Date(a.last_seen_at)),
+    [encounters, myBlocks]
   );
 
   const encounteredIds = useMemo(() =>
@@ -129,9 +145,9 @@ export default function Explore() {
 
   const undiscovered = useMemo(() =>
     allLocations.filter(
-      (u) => u.user_id !== user?.id && !encounteredIds.has(u.user_id)
+      (u) => u.user_id !== user?.id && !encounteredIds.has(u.user_id) && !myBlocks.includes(u.user_id)
     ),
-    [allLocations, encounteredIds, user?.id]
+    [allLocations, encounteredIds, user?.id, myBlocks]
   );
 
   // Build photo feed: all photos from all visible users, each as its own card
@@ -139,13 +155,13 @@ export default function Explore() {
     const items = [];
     for (const loc of allLocations) {
       if (loc.user_id === user?.id) continue;
+      if (myBlocks.includes(loc.user_id)) continue;
       for (const photo of (loc.photos || [])) {
         items.push({ photo, owner: loc });
       }
     }
-    // Shuffle by mixing owner order so it feels like a feed
     return items.sort((a, b) => new Date(b.owner.updated_date) - new Date(a.owner.updated_date));
-  }, [allLocations, user?.id]);
+  }, [allLocations, user?.id, myBlocks]);
 
   const isLoading = loadingEncounters || loadingAll;
 
