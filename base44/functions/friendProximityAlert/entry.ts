@@ -62,21 +62,8 @@ Deno.serve(async (req) => {
       );
 
       if (dist <= PROXIMITY_METERS) {
-        // Get the friend's user account for their email
-        const users = await base44.asServiceRole.entities.User.filter({ id: friendId });
-        const friendUser = users[0];
-        if (!friendUser?.email) continue;
-
-        const distStr = dist < 1000 ? `${Math.round(dist)}m` : `${(dist / 1000).toFixed(1)}km`;
-
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: friendUser.email,
-          subject: `👋 ${updatedLoc.user_name || 'A friend'} is nearby!`,
-          body: `Hey ${friendUser.full_name || ''},\n\n${updatedLoc.user_name || 'Your friend'} just showed up ${distStr} away from you on VibeCheck!\n\nOpen the app to connect 👉`,
-        });
-
         notified++;
-        console.log(`Notified ${friendUser.email} — friend ${updatedUserId} is ${distStr} away`);
+        console.log(`Friend ${updatedUserId} is nearby friend ${friendId}`);
       }
     }
 
