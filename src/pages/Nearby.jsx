@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radar, MapPinOff, RefreshCw, Plus, Map, List, ShieldCheck, MapPin } from "lucide-react";
+import { Radar, MapPinOff, RefreshCw, Plus, Map, List, ShieldCheck, MapPin, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ export default function Nearby() {
   const [hangoutsView, setHangoutsView] = useState("list");
   const [peopleView, setPeopleView] = useState("list");
   const [checkedIn, setCheckedIn] = useState(() => localStorage.getItem("proximity_checked_in") === "true");
+  const [mapHidden, setMapHidden] = useState(() => localStorage.getItem("proximity_map_hidden") === "true");
   const [showSharingDialog, setShowSharingDialog] = useState(false);
   const sharingDialogShownRef = useRef(false);
   const queryClient = useQueryClient();
@@ -100,8 +101,8 @@ export default function Nearby() {
 
     const rec = myLocationRecordRef.current;
 
-    // If not checked in, or inside a privacy zone, ensure is_visible=false
-    if (!checkedIn || insideZone || !location) {
+    // If not checked in, map hidden, or inside a privacy zone, ensure is_visible=false
+    if (!checkedIn || mapHidden || insideZone || !location) {
       if (rec) {
         base44.entities.UserLocation.update(rec.id, { is_visible: false }).catch(() => {});
       }
@@ -132,7 +133,7 @@ export default function Nearby() {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [location?.latitude, location?.longitude, insideZone, checkedIn]);
+  }, [location?.latitude, location?.longitude, insideZone, checkedIn, mapHidden]);
 
   const handleCheckIn = () => {
     setCheckedIn(true);
@@ -147,6 +148,19 @@ export default function Nearby() {
     const rec = myLocationRecordRef.current;
     if (rec) base44.entities.UserLocation.update(rec.id, { is_visible: false }).catch(() => {});
     toast("You're now hidden from nearby users.");
+  };
+
+  const handleToggleMapHidden = () => {
+    const next = !mapHidden;
+    setMapHidden(next);
+    localStorage.setItem("proximity_map_hidden", next ? "true" : "false");
+    if (next) {
+      const rec = myLocationRecordRef.current;
+      if (rec) base44.entities.UserLocation.update(rec.id, { is_visible: false }).catch(() => {});
+      toast("You're now hidden from all maps.");
+    } else {
+      toast("You can now appear on maps when checked in.");
+    }
   };
 
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
@@ -433,7 +447,19 @@ export default function Nearby() {
               <Plus className="h-3.5 w-3.5" /> Hangout
             </Button>
           )}
-          {isAuthenticated(user) && location && (
+          {isAuthenticated(user) && (
+            <Button
+              size="sm"
+              variant={mapHidden ? "default" : "outline"}
+              className={`rounded-full gap-1.5 px-3 ${mapHidden ? "bg-gray-700 hover:bg-gray-800 text-white" : "text-muted-foreground"}`}
+              onClick={handleToggleMapHidden}
+              title={mapHidden ? "You are hidden from all maps" : "Hide from all maps"}
+            >
+              <EyeOff className="h-3.5 w-3.5" />
+              {mapHidden ? "Hidden" : "Hide"}
+            </Button>
+          )}
+          {isAuthenticated(user) && location && !mapHidden && (
             checkedIn && !insideZone ? (
               <Button
                 size="sm"
@@ -453,6 +479,7 @@ export default function Nearby() {
               </Button>
             )
           )}
+
           <Button
             variant="outline"
             size="icon"
