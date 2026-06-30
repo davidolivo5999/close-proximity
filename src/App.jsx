@@ -16,6 +16,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Landing from "@/pages/Landing";
 
+
 import AppLayout from "@/components/shared/AppLayout";
 import Nearby from "@/pages/Nearby";
 import Friends from "@/pages/Friends";
@@ -80,6 +81,7 @@ const AuthenticatedApp = () => {
   return (
     <AnimatePresence mode="wait" initial={false}>
       <Routes location={routerLocation} key={routerLocation.pathname}>
+        <Route path="/landing" element={<Landing />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

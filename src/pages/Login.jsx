@@ -38,6 +38,10 @@ export default function Login() {
           <Link to="/register" className="text-primary font-medium hover:underline">
             Create one
           </Link>
+          <br />
+          <Link to="/" className="text-muted-foreground text-xs hover:text-foreground underline underline-offset-4 mt-1 inline-block">
+            Browse nearby without an account →
+          </Link>
         </>
       }
     >
