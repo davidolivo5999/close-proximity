@@ -1,9 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MapPin, Users, Zap, MessageCircle, Calendar, Shield } from "lucide-react";
 
 export default function Landing() {
+  const navigate = useNavigate();
   const features = [
     {
       icon: MapPin,
@@ -73,15 +74,21 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-6">
             <Link to="/register" className="w-full sm:w-auto">
               <Button size="lg" className="w-full rounded-xl">
-                Start Exploring
+                Create Account
               </Button>
             </Link>
             <Link to="/login" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="w-full rounded-xl">
-                Already have an account?
+                Sign In
               </Button>
             </Link>
           </div>
+          <button
+            onClick={() => navigate("/")}
+            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors mt-2"
+          >
+            Browse nearby without an account →
+          </button>
         </div>
       </section>
 

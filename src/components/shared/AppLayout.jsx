@@ -87,12 +87,6 @@ export default function AppLayout() {
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
-      {/* Preview mode banner for anonymous users */}
-      {!isAuthenticated(user) && (
-        <div className="bg-primary/10 border-b border-primary/20 px-5 py-2.5 text-center text-sm text-primary font-medium">
-          👀 Preview Mode — Explore the app features
-        </div>
-      )}
       {/* Scrollable content area — overscroll-contain prevents bubble to body */}
       <div
         className="flex-1 overflow-y-auto"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Radar, MapPinOff, RefreshCw, Plus, Map, List, ShieldCheck } from "lucide-react";
@@ -17,7 +18,7 @@ import { useFriendProximityAlerts } from "@/hooks/useFriendProximityAlerts";
 import HangoutsMap from "@/components/hangouts/HangoutsMap";
 import TrendingHangouts from "@/components/hangouts/TrendingHangouts";
 import PullToRefresh from "@/components/shared/PullToRefresh";
-import { isAdmin } from "@/lib/roleCheck";
+import { isAdmin, isAuthenticated } from "@/lib/roleCheck";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const RADIUS_KM = 50;
@@ -39,6 +40,8 @@ export default function Nearby() {
   });
 
   // Fetch user's own location record — pick the most recently updated one and delete duplicates
+  const authed = isAuthenticated(user);
+
   const { data: myLocationRecord } = useQuery({
     queryKey: ["myLocation", user?.id],
     queryFn: async () => {
@@ -58,7 +61,7 @@ export default function Nearby() {
       }
       return primary;
     },
-    enabled: !!user?.id,
+    enabled: authed,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -79,7 +82,7 @@ export default function Nearby() {
   // Broadcast own location — add debounce to avoid multiple updates (only for authenticated users)
   useEffect(() => {
     const user = userRef.current;
-    if (!user?.id) return;
+    if (!user?.id || !isAuthenticated(user)) return;
 
     if (!location) {
       const rec = myLocationRecordRef.current;
@@ -120,7 +123,7 @@ export default function Nearby() {
   const { data: allLocations = [], refetch: refetchLocations } = useQuery({
     queryKey: ["nearbyUsers"],
     queryFn: () => base44.entities.UserLocation.filter({ is_visible: true }),
-    enabled: !!user?.id,
+    enabled: true,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
@@ -129,7 +132,7 @@ export default function Nearby() {
   const { data: allHangouts = [], refetch: refetchHangouts } = useQuery({
     queryKey: ["hangouts"],
     queryFn: () => base44.entities.Hangout.filter({ is_active: true }),
-    enabled: !!user?.id,
+    enabled: true,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchInterval: false,
@@ -144,7 +147,7 @@ export default function Nearby() {
       ]);
       return [...blocked.map((b) => b.blocked_id), ...blockedBy.map((b) => b.blocker_id)];
     },
-    enabled: !!user?.id,
+    enabled: authed,
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -158,7 +161,7 @@ export default function Nearby() {
       ]);
       return [...sent, ...received];
     },
-    enabled: !!user?.id,
+    enabled: authed,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -373,6 +376,18 @@ export default function Nearby() {
 
   return (
     <div>
+      {/* Guest banner */}
+      {!authed && (
+        <div className="sticky top-0 z-40 bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-sm font-medium">👋 Browsing as guest — create an account to connect!</p>
+          <Link to="/register" className="shrink-0">
+            <Button size="sm" variant="secondary" className="rounded-full font-semibold text-xs px-3">
+              Create Account
+            </Button>
+          </Link>
+        </div>
+      )}
+
       {/* Sticky header */}
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 flex items-center justify-between safe-area-top">
         <div>
