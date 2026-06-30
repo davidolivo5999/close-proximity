@@ -61,7 +61,7 @@ const sections = [
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-4 flex items-center gap-3 safe-area-top">
         <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -70,6 +70,7 @@ export default function PrivacyPolicy() {
         <h1 className="text-lg font-semibold text-foreground">Privacy Policy</h1>
       </div>
 
+      <div className="flex-1 overflow-y-auto">
       <div className="max-w-2xl mx-auto px-5 py-8 space-y-8">
         {/* Intro */}
         <div className="space-y-1">
@@ -114,6 +115,7 @@ export default function PrivacyPolicy() {
         <div className="border-t border-border pt-6 text-sm text-muted-foreground text-center pb-8">
           © 2026 Close Proximity. All rights reserved.
         </div>
+      </div>
       </div>
     </div>
   );
