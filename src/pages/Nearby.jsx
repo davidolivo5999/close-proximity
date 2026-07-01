@@ -422,7 +422,12 @@ export default function Nearby() {
       {/* Guest banner */}
       {!authed && (
         <div className="sticky top-0 z-40 bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-3">
-          <p className="text-sm font-medium">👋 Browsing as guest — create an account to connect!</p>
+          <div>
+            <p className="text-sm font-medium">👋 Browsing as guest — create an account to connect!</p>
+            <Link to="/login" className="text-xs text-primary-foreground/80 underline underline-offset-2">
+              Already have an account? Log In
+            </Link>
+          </div>
           <Link to="/register" className="shrink-0">
             <Button size="sm" variant="secondary" className="rounded-full font-semibold text-xs px-3">
               Create Account
