@@ -118,7 +118,7 @@ export default function GroupConversation() {
   const otherMembers = (group?.member_names || []).filter((_, i) => group?.member_ids?.[i] !== user?.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="fixed inset-0 z-[60] flex flex-col bg-background">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3 safe-area-top">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
