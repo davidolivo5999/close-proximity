@@ -172,8 +172,26 @@ export default function Conversation() {
     sendMsg.mutate(trimmed);
   };
 
+  // iOS Safari doesn't resize the layout viewport when the keyboard opens,
+  // which can leave fixed-position elements hidden behind the keyboard or
+  // misaligned with actual taps. Track the visual viewport height instead.
+  const [viewportHeight, setViewportHeight] = useState(
+    typeof window !== "undefined" ? window.innerHeight : 0
+  );
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handleResize = () => setViewportHeight(vv.height);
+    handleResize();
+    vv.addEventListener("resize", handleResize);
+    return () => vv.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-background">
+    <div
+      className="fixed top-0 left-0 right-0 z-[60] flex flex-col bg-background"
+      style={{ height: viewportHeight }}
+    >
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3 safe-area-top">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
