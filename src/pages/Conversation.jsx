@@ -169,7 +169,7 @@ export default function Conversation() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 z-[60] flex flex-col bg-white">
+    <div className="fixed top-0 left-0 right-0 bottom-0 z-[60] flex flex-col bg-white" style={{ minHeight: "-webkit-fill-available" }}>
       {/* Row 1: Header */}
       <div className="flex-none flex items-center gap-3 px-4 py-3 border-b border-border safe-area-top">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
@@ -217,7 +217,7 @@ export default function Conversation() {
       </div>
 
       {/* Row 3: Input bar */}
-      <div className="flex-none flex items-center gap-2 p-3 border-t border-border safe-area-bottom">
+      <div className="flex-none flex items-center gap-2 p-3 border-t border-border safe-area-bottom" style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}>
         <input
           className="flex-1 bg-muted rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-primary"
           style={{ fontSize: "16px" }}
