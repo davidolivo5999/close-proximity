@@ -50,15 +50,17 @@ export default function GroupConversation() {
 
   useEffect(() => {
     if (messages.length === 0) return;
-    const timeout = setTimeout(() => {
+    const scrollToBottom = () => {
       const container = messagesContainerRef.current;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
-      } else {
-        bottomRef.current?.scrollIntoView();
-      }
-    }, 100);
-    return () => clearTimeout(timeout);
+      if (container) container.scrollTop = container.scrollHeight;
+    };
+    // Run after layout settles, and again shortly after in case images/fonts shift height
+    const raf = requestAnimationFrame(scrollToBottom);
+    const timeout = setTimeout(scrollToBottom, 300);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timeout);
+    };
   }, [messages]);
 
   const { data: myLocation } = useQuery({
