@@ -122,8 +122,12 @@ export default function Conversation() {
     .filter((m) => m.read && !m._optimistic)
     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0]?.id;
 
+  const hasScrolledOnceRef = useRef(false);
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length === 0) return;
+    bottomRef.current?.scrollIntoView({ behavior: hasScrolledOnceRef.current ? "smooth" : "auto" });
+    hasScrolledOnceRef.current = true;
   }, [messages.length]);
 
   const sendMsg = useMutation({
