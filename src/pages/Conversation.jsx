@@ -172,33 +172,8 @@ export default function Conversation() {
     sendMsg.mutate(trimmed);
   };
 
-  // iOS Safari doesn't resize the layout viewport when the keyboard opens —
-  // instead it scrolls the whole page and shrinks the visual viewport, which
-  // leaves fixed-position elements visually offset from where taps land.
-  // Track both the visual viewport's height and scroll offset and keep this
-  // container pinned to it.
-  const [viewportRect, setViewportRect] = useState({
-    height: typeof window !== "undefined" ? window.innerHeight : 0,
-    offsetTop: 0,
-  });
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const handleUpdate = () => setViewportRect({ height: vv.height, offsetTop: vv.offsetTop });
-    handleUpdate();
-    vv.addEventListener("resize", handleUpdate);
-    vv.addEventListener("scroll", handleUpdate);
-    return () => {
-      vv.removeEventListener("resize", handleUpdate);
-      vv.removeEventListener("scroll", handleUpdate);
-    };
-  }, []);
-
   return (
-    <div
-      className="fixed left-0 right-0 z-[60] flex flex-col bg-background"
-      style={{ height: viewportRect.height, top: viewportRect.offsetTop }}
-    >
+    <div className="fixed inset-0 z-[60] flex flex-col bg-background">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3 safe-area-top">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
@@ -246,7 +221,7 @@ export default function Conversation() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border bg-background px-4 py-3 flex items-center gap-2 safe-area-bottom">
+      <div className="shrink-0 border-t border-border bg-background px-4 py-3 flex items-center gap-2 safe-area-bottom">
         <input
           className="flex-1 bg-muted rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-primary"
           style={{ fontSize: "16px" }}
