@@ -169,7 +169,7 @@ export default function Conversation() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 z-50 flex flex-col bg-white">
+    <div className="fixed top-0 left-0 right-0 bottom-0 z-[60] flex flex-col bg-white">
       {/* Row 1: Header */}
       <div className="flex-none flex items-center gap-3 px-4 py-3 border-b border-border safe-area-top">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
