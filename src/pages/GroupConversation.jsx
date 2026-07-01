@@ -12,6 +12,7 @@ export default function GroupConversation() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const bottomRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [text, setText] = useState("");
 
   const { data: user } = useQuery({
@@ -48,8 +49,17 @@ export default function GroupConversation() {
   }, [groupId, queryClient]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    if (messages.length === 0) return;
+    const timeout = setTimeout(() => {
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      } else {
+        bottomRef.current?.scrollIntoView();
+      }
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [messages]);
 
   const { data: myLocation } = useQuery({
     queryKey: ["myLocation", user?.id],
@@ -122,7 +132,7 @@ export default function GroupConversation() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.map((msg) => {
           const isMe = msg.from_user_id === user?.id;
           return (

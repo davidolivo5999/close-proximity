@@ -14,6 +14,7 @@ export default function Conversation() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const bottomRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [text, setText] = useState("");
 
   const peerNameFromState = routerLocation.state?.peerName;
@@ -122,13 +123,18 @@ export default function Conversation() {
     .filter((m) => m.read && !m._optimistic)
     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0]?.id;
 
-  const hasScrolledOnceRef = useRef(false);
-
   useEffect(() => {
     if (messages.length === 0) return;
-    bottomRef.current?.scrollIntoView({ behavior: hasScrolledOnceRef.current ? "smooth" : "auto" });
-    hasScrolledOnceRef.current = true;
-  }, [messages.length]);
+    const timeout = setTimeout(() => {
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      } else {
+        bottomRef.current?.scrollIntoView();
+      }
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [messages]);
 
   const sendMsg = useMutation({
     mutationFn: (msgText) =>
@@ -183,7 +189,7 @@ export default function Conversation() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.map((msg) => {
           const isMe = msg.from_user_id === user?.id;
           return (
