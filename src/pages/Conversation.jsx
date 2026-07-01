@@ -172,25 +172,32 @@ export default function Conversation() {
     sendMsg.mutate(trimmed);
   };
 
-  // iOS Safari doesn't resize the layout viewport when the keyboard opens,
-  // which can leave fixed-position elements hidden behind the keyboard or
-  // misaligned with actual taps. Track the visual viewport height instead.
-  const [viewportHeight, setViewportHeight] = useState(
-    typeof window !== "undefined" ? window.innerHeight : 0
-  );
+  // iOS Safari doesn't resize the layout viewport when the keyboard opens —
+  // instead it scrolls the whole page and shrinks the visual viewport, which
+  // leaves fixed-position elements visually offset from where taps land.
+  // Track both the visual viewport's height and scroll offset and keep this
+  // container pinned to it.
+  const [viewportRect, setViewportRect] = useState({
+    height: typeof window !== "undefined" ? window.innerHeight : 0,
+    offsetTop: 0,
+  });
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const handleResize = () => setViewportHeight(vv.height);
-    handleResize();
-    vv.addEventListener("resize", handleResize);
-    return () => vv.removeEventListener("resize", handleResize);
+    const handleUpdate = () => setViewportRect({ height: vv.height, offsetTop: vv.offsetTop });
+    handleUpdate();
+    vv.addEventListener("resize", handleUpdate);
+    vv.addEventListener("scroll", handleUpdate);
+    return () => {
+      vv.removeEventListener("resize", handleUpdate);
+      vv.removeEventListener("scroll", handleUpdate);
+    };
   }, []);
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[60] flex flex-col bg-background"
-      style={{ height: viewportHeight }}
+      className="fixed left-0 right-0 z-[60] flex flex-col bg-background"
+      style={{ height: viewportRect.height, top: viewportRect.offsetTop }}
     >
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3 safe-area-top">
