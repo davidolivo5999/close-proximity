@@ -169,9 +169,9 @@ export default function Conversation() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 z-[60] flex flex-col bg-white" style={{ minHeight: "-webkit-fill-available" }}>
-      {/* Row 1: Header */}
-      <div className="flex-none flex items-center gap-3 px-4 py-3 border-b border-border safe-area-top">
+    <div className="flex flex-col h-screen bg-white">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -186,7 +186,7 @@ export default function Conversation() {
         />
       </div>
 
-      {/* Row 2: Messages */}
+      {/* Messages */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.map((msg) => {
           const isMe = msg.from_user_id === user?.id;
@@ -216,8 +216,11 @@ export default function Conversation() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Row 3: Input bar */}
-      <div className="flex-none flex items-center gap-2 p-3 border-t border-border safe-area-bottom" style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}>
+      {/* Input bar */}
+      <div
+        className="flex items-center gap-2 p-3 border-t border-border"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}
+      >
         <input
           className="flex-1 bg-muted rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-primary"
           style={{ fontSize: "16px" }}
