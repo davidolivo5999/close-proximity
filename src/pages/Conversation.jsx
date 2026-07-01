@@ -110,6 +110,10 @@ export default function Conversation() {
     return () => unsub();
   }, [user?.id, peerId, queryClient]);
 
+  // Mark received as read — only the sender can update their own messages per RLS
+  // so we skip this silently; read receipts are shown based on the sender's own data
+  
+
   const messages = [...sent, ...received].sort(
     (a, b) => new Date(a.created_date) - new Date(b.created_date)
   );
@@ -169,9 +173,9 @@ export default function Conversation() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3 safe-area-top">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -216,22 +220,19 @@ export default function Conversation() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input bar */}
-      <div
-        className="flex items-center gap-2 p-3 border-t border-border"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}
-      >
+      {/* Input */}
+      <div className="border-t border-border bg-background px-4 py-3 flex items-center gap-2 safe-area-bottom">
         <input
           className="flex-1 bg-muted rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-primary"
           style={{ fontSize: "16px" }}
-          placeholder="Type a message..."
+          placeholder="Type a message…"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
         />
         <Button
           size="icon"
-          className="rounded-full h-10 w-10 shrink-0 bg-orange-500 hover:bg-orange-600 text-white"
+          className="rounded-full h-10 w-10 shrink-0"
           onClick={handleSend}
           disabled={!text.trim()}
         >

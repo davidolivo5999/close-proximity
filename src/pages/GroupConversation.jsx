@@ -120,7 +120,7 @@ export default function GroupConversation() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3 flex items-center gap-3 safe-area-top">
         <Button variant="ghost" size="icon" className="rounded-full shrink-0" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -164,10 +164,7 @@ export default function GroupConversation() {
       </div>
 
       {/* Input */}
-      <div
-        className="shrink-0 border-t border-border bg-background px-4 py-3 flex items-center gap-2"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}
-      >
+      <div className="border-t border-border bg-background px-4 py-3 flex items-center gap-2 safe-area-bottom">
         <input
           className="flex-1 bg-muted rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-primary"
           style={{ fontSize: "16px" }}
