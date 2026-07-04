@@ -437,12 +437,12 @@ export default function Nearby() {
       )}
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 flex items-center justify-between safe-area-top">
+      <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border/50 px-5 py-3 flex flex-wrap items-center justify-between gap-y-2 gap-x-3 safe-area-top max-w-full overflow-hidden">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Discover</h1>
           <p className="text-sm text-muted-foreground">People &amp; hangouts nearby</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {location && isAdmin(user) && (
             <Button
               size="sm"
