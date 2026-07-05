@@ -2,7 +2,11 @@
 
 A proximity-based social app for iOS that helps people discover and connect with others nearby, in real time.
 
-**Live app:** [close-proximity.com](https://close-proximity.com) · **App Store:** *coming soon*
+<a href="https://apps.apple.com/us/app/close-proximity/id6780470839">
+  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="50">
+</a>
+
+**Live app:** [close-proximity.com](https://close-proximity.com) · **App Store:** [Close Proximity](https://apps.apple.com/us/app/close-proximity/id6780470839)
 
 <!-- Add a screenshot or short demo GIF here — this is the first thing visitors see -->
 
@@ -39,35 +43,4 @@ npm install
 Create a `.env.local` file in the project root:
 
 ```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
-```
-
-Then start the dev server:
-
-```bash
-npm run dev
-```
-
-## Project structure
-
-```
-src/
-├── api/          # Base44 client setup
-├── components/   # Shared UI components (layout, dialogs, shadcn/ui)
-├── lib/          # Auth context, OneSignal service, app params
-└── pages/        # Routes: discovery, chat, auth flows, privacy policy
-```
-
-## Privacy & safety
-
-Close Proximity handles location and personal data with care:
-
-- Privacy policy published at [close-proximity.com/privacy](https://close-proximity.com/privacy)
-- Location is used only for proximity features, with OS-level permission prompts
-- User data is never sold; sharing is limited to operational providers (OneSignal, Apple)
-- All user-generated content can be reported or flagged, and users can block one another; reports route to an admin moderation dashboard
-
-## About
-
-Built by [David Olivo](https://github.com/davidolivo5999), an independent app developer in NYC.
+VITE_BASE
