@@ -2,7 +2,7 @@ Close Proximity
 
 A proximity-based social app for iOS that helps people discover and connect with others nearby, in real time.
 
-Live app: close-proximity.com · App Store: close proximity
+Live app: close-proximity.com · App Store: close proximity 
 
 <!-- Add a screenshot or short demo GIF here — this is the first thing visitors see -->
 What it does
